@@ -1,0 +1,448 @@
+---
+title: "STAT240 Lab9"
+author: "Jiajun Zhang"
+date: "March 22, 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question1
+```{r}
+library(stringr)
+course_url = "https://www.sfu.ca/outlines.html?2019/spring/stat/240/d100"
+course_page = readLines(course_url)
+```
+
+# a)
+```{r}
+h3_headings=function(webpage){
+  headings=grep("<h3", webpage, value=T)
+  #remove spaces
+  headings=gsub("\\s{2,}", "", headings)
+  #remove the beginning html <> patterns
+  headings=gsub("^.*?>", "", headings)
+  #remove the ending <> patterns
+  headings=gsub("*?<+.+$", "", headings)
+  headings
+}
+h3_headings(course_page)
+```
+&nbsp;  
+
+# b)
+```{r}
+course_name=function(webpage){
+  h1_headings=grep("<h1 id=\"name\">", webpage, value=T)
+  # h1_headings
+  #remove beginning spaces
+  h1_headings=gsub("\\s{2,}", "", h1_headings)
+  #remove the beginning html <> pattern
+  h1_headings=gsub("^.*?>","", h1_headings)
+  #remove everything after STAT240 
+  h1_headings=gsub("<.+>", "", h1_headings)
+  #remove everything before -
+  course=gsub("^.+?\\-","", h1_headings)
+  #trim the leading/trailing spaces
+  (course=trimws(course))
+}
+course_name(course_page)
+```
+&nbsp;  
+
+# c)
+```{r}
+course_title=function(webpage){
+  h2_index=grep("<h2 id=\"title\">", webpage)
+  title=webpage[h2_index+1]
+  #remove the leading space
+  (title=trimws(title))
+}
+course_title(course_page)
+```
+&nbsp;  
+
+# d)
+```{r}
+# grep("<h4>", course_page, value=T)
+#Instructor info is b/w <h4>Instructor:</h4> and <h4>Prerequisites:</h4>
+course_instructor=function(webpage){
+  h4_index1=grep("<h4>Instructor:</h4>", webpage)
+  h4_index2=grep("<h4>Prerequisites:</h4>", webpage)
+  # c(h4_index1, h4_index2)
+  # course_page[248:262]
+  instructor=webpage[h4_index1+1]
+  #remove the beginning <> pattern and leading/ending spaces
+  instructor=trimws(gsub("^.*?>","", instructor))
+  (instructor=gsub("*?<+.+$", "", instructor))
+}
+course_instructor(course_page)
+```
+&nbsp;  
+
+# e)
+```{r}
+# grep("<h4>", course_page, value=T)
+course_time_place=function(webpage){
+  h4_index3=grep("<h4>Course Times \\+ Location:", webpage)
+  time_place=webpage[h4_index3+1]
+  time_place=gsub("^.*?>", "", time_place)
+  #change $ndash to -
+  time_place=str_replace_all(time_place, "&ndash;", "-")
+  #remove <br> and </p>
+  time_place=gsub("<.*?>"," ", time_place)
+  (time_place=trimws(time_place))
+}
+course_time_place(course_page)
+```
+&nbsp;  
+
+# f)
+```{r}
+# Long function used for second question  
+course_book=function(webpage){
+  book_index=grep("<h4>REQUIRED READING:</h4>", webpage)
+  book_index1=grep("<h4>RECOMMENDED READING:</h4>", webpage)
+  if(length(book_index1)==0){
+      textbook=webpage[book_index+4]
+      if(str_detect(textbook, "Required Textbook:")==TRUE){
+          textbook=gsub("Required Textbook:", "", textbook)
+      }
+      if(str_detect(textbook, "&+[[:alpha:]]+\\;")==TRUE){
+          textbook=gsub("&+[[:alpha:]]+\\;", "", textbook)
+      }
+      textbook=gsub("<.*?>", "", textbook)
+      (textbook=trimws(textbook))
+  }
+  else if(length(book_index)==0){
+      textbook1=webpage[book_index1+4]
+      if(str_detect(textbook1, "Required Textbook:")==TRUE){
+          textbook1=gsub("Required Textbook:", "", textbook1)
+      }
+      if(str_detect(textbook1, "&+[[:alpha:]]+\\;")==TRUE){
+          textbook1=gsub("&+[[:alpha:]]+\\;", "", textbook1)
+      }
+      textbook1=gsub("<.*?>", "", textbook1)
+      (textbook1=trimws(textbook1))
+  }
+}
+course_book(course_page)
+```
+&nbsp;  
+
+# g)
+```{r}
+# c(grep("<h4>Exam Times \\+ Location:</h4>", course_page), 
+#   grep("<h4>Instructor:</h4>", course_page))
+# course_page[234:248]
+# course_page[236:241]
+
+course_2exams=function(webpage){
+  date=trimws(gsub("<.*?>", "", webpage[c(236, 240)]))
+  time=trimws(webpage[c(237, 241)])
+  time=str_replace_all(time, "&ndash;", "-")
+  #remove everything after time, starting from - since we only want the start time
+  time=trimws(gsub("\\-+.+$","", time))
+  
+  place=trimws(webpage[c(237, 241)])
+  #remove everything before place
+  place=gsub("^.*?>", "", place)
+
+  #Exam TAKES PLACE IN TWO DIFFERENT ROOMS OR TIMES
+  matrix(c(time, date, place), nrow=2, byrow=F)
+}
+course_2exams(course_page)
+```
+
+
+\pagebreak
+
+
+## Question2  
+```{r}
+EVSC100_url="https://www.sfu.ca/outlines.html?2017/spring/evsc/100/d100"
+EVSC_page=readLines(EVSC100_url)
+STAT452_url="https://www.sfu.ca/outlines.html?2018/fall/stat/452/d100"
+STAT452_page=readLines(STAT452_url)
+#Courses offered this term with different sections
+STAT100_url="https://www.sfu.ca/outlines.html?2019/spring/stat/100/d100"
+STAT100_page=readLines(STAT100_url)
+STAT203_url_c100="https://www.sfu.ca/outlines.html?2019/spring/stat/203/c100"
+STAT203_page_c100=readLines(STAT203_url_c100)
+STAT203_url_d100="https://www.sfu.ca/outlines.html?2019/spring/stat/203/d100"
+STAT203_page_d100=readLines(STAT203_url_d100)
+STAT270_url_c100="https://www.sfu.ca/outlines.html?2019/spring/stat/270/c100"
+STAT270_page_c100=readLines(STAT270_url_c100)
+STAT270_url_d100="https://www.sfu.ca/outlines.html?2019/spring/stat/270/d100"
+STAT270_page_d100=readLines(STAT270_url_d100)
+STAT270_url_d900="https://www.sfu.ca/outlines.html?2019/spring/stat/270/d900"
+STAT270_page_d900=readLines(STAT270_url_d900)
+```
+
+```{r}
+h3_headings=function(webpage){
+  headings=grep("<h3", webpage, value=T)
+  headings=gsub("\\s{2,}", "", headings)
+  headings=gsub("^.*?>", "", headings)
+  headings=gsub("*?<+.+$", "", headings)
+  paste(headings[1], headings[2], sep=" & ")
+}
+
+#Use previous codes, now create a function to find the exam info for rest of the courses
+#info is located line 237-238
+course_1exam=function(webpage){
+  date=trimws(gsub("<.*?>", "", webpage[237]))
+  time=trimws(webpage[c(238)])
+  time=str_replace_all(time, "&ndash;", "-")
+  #remove everything after time, starting from - since we only want the start time
+  time=trimws(gsub("\\-+.+$","", time))
+  place=trimws(webpage[c(238)])
+  #remove everything before place
+  place=gsub("^.*?>", "", place)
+  
+  paste(time, date, place)
+}
+
+# EVSC is 236-237
+course_1exam_evsc=function(webpage){
+  date=trimws(gsub("<.*?>", "", webpage[236]))
+  time=trimws(webpage[c(237)])
+  time=str_replace_all(time, "&ndash;", "-")
+  #remove everything after time, starting from - since we only want the start time
+  time=trimws(gsub("\\-+.+$","", time))
+  place=trimws(webpage[c(237)])
+  #remove everything before place
+  place=gsub("^.*?>", "", place)
+  
+  paste(time, date, place)
+}
+
+#Many courses have 2 exams info on it, recreate function to find them
+course_2exams=function(webpage){
+  date=trimws(gsub("<.*?>", "", webpage[c(236, 240)]))
+  time=trimws(webpage[c(237, 241)])
+  time=str_replace_all(time, "&ndash;", "-")
+  #remove everything after time, starting from - since we only want the start time
+  time=trimws(gsub("\\-+.+$","", time))
+  place=trimws(webpage[c(237, 241)])
+  #remove everything before place
+  place=gsub("^.*?>", "", place)
+
+  #Make it to one line b/c we need it for the following data frame
+  paste( paste(time[1], date[1], place[1]), 
+         paste(time[2], date[2], place[2]), sep=" & ")
+}
+
+
+#Recreate instructor function b/c of online courses 
+course_instructor=function(webpage){
+  index1=grep("<h4>Instructor:</h4>", webpage)
+  #Distance Education sections do not have instructor name
+  if(length(index1)==0){
+    return("Distance Education")
+    break
+  }
+  else{
+    instructor1=webpage[index1+1]
+    #remove the beginning <> pattern and leading/ending spaces
+    instructor1=trimws(gsub("^.*?>","", instructor1))
+    (instructor1=gsub("*?<+.+$", "", instructor1))
+  }
+}
+
+
+course_timeplace=function(webpage){
+  index=grep("(<h4>Course Times \\+ Location:)", webpage)
+    time_place2=webpage[(index+1):(index+2)]
+    time_place2=gsub("^.*?>", "", time_place2)
+    #change $ndash to -
+    time_place2=str_replace_all(time_place2, "&ndash;", "-")
+    #remove <br> and </p>
+    time_place2=gsub("<.*?>"," ", time_place2)
+    time_place2=trimws(time_place2)
+    paste(time_place2[1], time_place2[2], sep="  ")
+}
+
+#Create a function to find the course section
+course_section=function(webpage){
+  IND=grep("<h1 id=\"name\">", webpage, value=T)
+  str_extract(IND, "[[:upper:]]+\\d{3}")
+}
+
+
+courses_df=data.frame( matrix( c( h3_headings(course_page), course_name(course_page), 
+                       course_section(course_page), course_title(course_page), 
+                       course_instructor(course_page), course_time_place(course_page), 
+                       course_2exams(course_page), course_book(course_page),
+                h3_headings(EVSC_page),course_name(EVSC_page), course_section(EVSC_page), 
+                course_title(EVSC_page), course_instructor(EVSC_page), 
+                course_time_place(EVSC_page), course_1exam_evsc(EVSC_page), course_book(EVSC_page),
+                
+                h3_headings(STAT452_page), course_name(STAT452_page), course_section(STAT452_page), 
+                course_title(STAT452_page), course_instructor(STAT452_page), 
+                course_timeplace(STAT452_page), course_1exam(STAT452_page), course_book(STAT452_page),
+                
+                h3_headings(STAT100_page), course_name(STAT100_page), course_section(STAT100_page), 
+                course_title(STAT100_page), course_instructor(STAT100_page),
+                course_timeplace(STAT100_page), course_1exam(STAT100_page), course_book(STAT100_page), 
+                
+                h3_headings(STAT203_page_c100), course_name(STAT203_page_c100), course_section(STAT203_page_c100), 
+                course_title(STAT203_page_c100), course_instructor(STAT203_page_c100),
+                course_timeplace(STAT203_page_c100), course_2exams(STAT203_page_c100), course_book(STAT203_page_c100),
+                
+                h3_headings(STAT203_page_d100), course_name(STAT203_page_d100), course_section(STAT203_page_d100), 
+                course_title(STAT203_page_d100), course_instructor(STAT203_page_d100), 
+                course_timeplace(STAT203_page_d100), course_1exam(STAT203_page_d100), course_book(STAT203_page_d100), 
+                
+                h3_headings(STAT270_page_c100), course_name(STAT270_page_c100), course_section(STAT270_page_c100), 
+                course_title(STAT270_page_c100), course_instructor(STAT270_page_c100), 
+                course_timeplace(STAT270_page_c100), course_2exams(STAT270_page_c100), course_book(STAT270_page_c100),
+                
+                h3_headings(STAT270_page_d100), course_name(STAT270_page_d100), course_section(STAT270_page_d100), 
+                course_title(STAT270_page_d100), course_instructor(STAT270_page_d100), 
+                course_timeplace(STAT270_page_d100), course_1exam(STAT270_page_d100), course_book(STAT270_page_d100),
+                
+                h3_headings(STAT270_page_d900), course_name(STAT270_page_d900), course_section(STAT270_page_d900), 
+                course_title(STAT270_page_d900), course_instructor(STAT270_page_d900), 
+                course_timeplace(STAT270_page_d900), course_1exam(STAT270_page_d900), course_book(STAT270_page_d900) ),
+       nrow=9, byrow=T) )
+
+colnames(courses_df)=c("h3 Headings","Course Number", "Section", "Course Title", "Course Instructor", 
+                       "Course Time and Location", "Exam Start Time, Date, and Loaction", "Course Textbook")
+courses_df
+```
+
+
+\pagebreak
+
+## Question3  
+
+```{r message=FALSE}
+library(rvest)
+library(XML)
+library(RCurl)
+```
+
+
+# a)
+```{r warning=FALSE}
+marvel_url="https://en.wikipedia.org/wiki/List_of_Marvel_Cinematic_Universe_films"
+marvel=read_html(marvel_url)
+BO_perform=html_table(html_nodes(marvel, "table"), fill=T)[[8]]
+critical_response=html_table(html_nodes(marvel, "table"), fill=T)[[9]]
+
+#Modify this, removing the first row 
+BO_perform1=NA
+BO_perform1=BO_perform[(2:(nrow(BO_perform)-1)), ]
+colnames(BO_perform1)=c("Film", "US Release Date", "US and Canada Box Office Gross", 
+                        "Other Territories Box Office Gross", "Worldwide Box Office Gross", 
+                        "US and Canada All-time Ranking", "Worldwide All_time Ranking", 
+                        "Budget", "Ref(s)")
+# Modify the observation numbers
+row.names(BO_perform1)=1:nrow(BO_perform1)
+#Remove the last row
+critical_response=critical_response[(1:(nrow(critical_response)-1)),]
+
+(merge_table=merge(BO_perform1, critical_response, by="Film"))
+
+```
+&nbsp;  
+
+# b)
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+new_table=merge_table%>%select("Film", "Worldwide Box Office Gross", 
+                            "Budget", "US Release Date", 
+                            "Rotten Tomatoes", "Metacritic")
+#Convert to numeric number 
+new_table$`Worldwide Box Office Gross`=
+  as.numeric(gsub("[[:punct:]]", "", new_table$`Worldwide Box Office Gross`))
+new_table$Budget=as.numeric(parse_number(new_table$Budget)*1000000)
+#Want the RELEASE YEAR
+new_table$`US Release Date`=trimws(str_extract(new_table$`US Release Date`,
+                                               "[^(\\,)]+$"))
+#Want the numeric number of last two cols
+new_table$`Rotten Tomatoes`=as.numeric(str_extract(new_table$`Rotten Tomatoes`, 
+                                                   "\\d+[^(?%)]"))
+new_table$Metacritic=as.numeric(str_extract(new_table$Metacritic, 
+                                            "\\d+[^[:space:]]"))
+
+colnames(new_table)[4]="US Release Year"
+head(new_table, 10)
+```
+&nbsp;  
+
+# c)
+```{r, fig.width=9, fig.height=9}
+plot(x=new_table$`US Release Year`, 
+     y=log10(new_table$`Worldwide Box Office Gross`), 
+     col=2, ylim=c(7.9, 9.4), 
+     main="Moving Average of Worldwide Box Office Gross \n and Budget Over Time", 
+     xlab="US Release Year", ylab="Dollars in log10 Base")
+points(x=new_table$`US Release Year`, 
+             y=log10(new_table$Budget), col=3)
+lines(ksmooth(x=new_table$`US Release Year`, 
+             y=log10(new_table$`Worldwide Box Office Gross`), 
+             bandwidth=2, kernel="normal"), col=2)
+lines(ksmooth(x=new_table$`US Release Year`, 
+             y=log10(new_table$Budget), 
+             bandwidth=2, kernel="normal"), col=3)
+legend("topleft", pch=c(1,1,NA,NA), lty=c(NA,NA,1,1), col=c(2,3,2,3), 
+       c("Box Office Gross Worldwide", "Budget", 
+         "MA of Box Office Gross Worldwide", "MA of Budget"))
+```
+&nbsp;  
+
+# e)
+```{r}
+#Revenue=Gross-Budget
+revenue=new_table$`Worldwide Box Office Gross` - new_table$Budget
+plot(density(log10(revenue)), xlab="Revenue in log10 Base", 
+     main="The Distribution of Revenue(log10 Base) \n For Marvel Movies")
+```
+&nbsp;  
+
+# f)
+```{r, fig.width=10, fig.height=9}
+# max(new_table$`Rotten Tomatoes`); min(new_table$`Rotten Tomatoes`)
+plot(y=log10(new_table$Budget), x=new_table$`Rotten Tomatoes`, 
+     ylim=c(7.9, 10), col=1, xlab="Budget and BO Gross in log10 Base", 
+     ylab="Rotten Tomatoes Score", 
+     main="log10 Base of Budget and BO Gross VS Rotten Tomatoes Score")
+points(y=log10(new_table$`Worldwide Box Office Gross`), 
+       x=new_table$`Rotten Tomatoes`, col=2)
+lines(ksmooth(y=log10(new_table$Budget), x=new_table$`Rotten Tomatoes`,
+              bandwidth=5, kernel="normal"))
+legend("topright", pch=c(1,1,NA), lty=c(NA,NA,1), col=c(1,2,1), 
+       c("log10 Budget VS Rotten Tomatoes Score", "log10 BO Gross VS Rotten Tomatoes Score", 
+         "Moving Average For Score w.r.t Budget "), cex=0.9)
+```
+&nbsp;  
+
+# g)
+```{r}
+plot(new_table$`Rotten Tomatoes`, new_table$Metacritic, xlab="Rotten Tomatoes Score", 
+     ylab="Metacritic Score", 
+     main="The Relationship Between Rotten Tomatoes \n And Metacritic Scores")
+lines(ksmooth(new_table$`Rotten Tomatoes`, new_table$Metacritic, 
+              bandwidth=5, kernel="normal"), col=2)
+legend("topleft", pch=c(1,NA), col=c(1,2), lty=c(NA,1), 
+       c("Rottern Tomatoes And Metacritic Scores", 
+         "Moving Average Line Between Them"))
+```
+
+  - The plot shows that the Rotten Tomatoes and Metacritic Scores agree with each other, as we can tell by the increasing trend from the graph.  
+  
+# h)
+```{r}
+plot(new_table$`US Release Year`, new_table$Metacritic, ylim=c(50,90), 
+     xlab="US Release Year", ylab="Metacritic score", 
+     main="Metacritic score of Marvel Movies Over Time")
+lines(ksmooth(new_table$`US Release Year`, new_table$Metacritic, 
+              kernel="normal", bandwidth=4), col=2)
+legend("topleft", pch=c(1,NA), lty=c(NA,1), col=c(1,2),
+       c("Metacritic score", "Smooth Trend Line"))
+```
+
