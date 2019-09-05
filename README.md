@@ -1,1 +1,1 @@
-### This repository contains Jun Zhang's academic projects.
+### This repository contains Jun Zhang's past academic projects.
