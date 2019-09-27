@@ -13,14 +13,14 @@
 
 \usepackage{titlesec}
 \usepackage{amsmath}
-\usepackage{gensymb} %For use of temperature degree
+\usepackage{gensymb} 
 
 
 \begin{document}
 \maketitle
 
 \titleformat{\subsection}[runin]
-{\normalfont\large\bfseries}{\thesubsection}{1em}{} %For removing space b/w subsection and text    
+{\normalfont\large\bfseries}{\thesubsection}{1em}{}    
 
 <<include=FALSE>>=
 library(knitr)
