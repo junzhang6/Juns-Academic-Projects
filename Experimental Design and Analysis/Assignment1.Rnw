@@ -1,0 +1,581 @@
+\documentclass[12pt]{article}
+
+\title{STAT430 Assignment1}
+\author{Jiajun Zhang}
+
+\usepackage{float}
+\linespread{1.5}
+\usepackage[margin=1in]{geometry}
+
+\makeatletter
+\renewcommand{\@seccntformat}[1]{}
+\makeatother
+
+\usepackage{titlesec}
+\usepackage{amsmath}
+\usepackage{gensymb} %For use of temperature degree
+
+
+\begin{document}
+\maketitle
+
+\titleformat{\subsection}[runin]
+{\normalfont\large\bfseries}{\thesubsection}{1em}{} %For removing space b/w subsection and text    
+
+<<include=FALSE>>=
+library(knitr)
+opts_chunk$set(
+concordance=TRUE
+)
+@
+
+<<global_options, include=FALSE>>=
+knitr::opts_chunk$set(fig.pos = 'H')
+@
+
+\section{Question 2.20}
+
+\subsection*{(a)} \enspace Let $\mu$ be the mean diameter of steel shafts in inches. 
+
+  $H_{0}$ : $\mu$ = 0.255  
+  
+  $H_{a}$ : $\mu$ $\ne$ 0.255
+  
+\subsection*{(b)} \enspace Under the null hypothesis $\mu$ = 0.255, we need to calculate the Z test statistics and compare it with the significant value at $\alpha$ = 0.05.
+<<>>=
+n <- 10
+sigma <- 0.0001
+y_bar <- 0.2545
+mu <- 0.255
+alpha <- 0.05
+
+z_score <- (y_bar-mu) / (sigma/sqrt(n))
+round(z_score, 2) 
+
+#Critical value
+Z <- round(qnorm(1 - (1 - 0.95)/2), 2)
+Z
+@
+Since $Z_{0.025}$ = -1.96 and 1.96 since it is a two-tailed test and -15.81 $\textless$ -1.96, we reject $H_{0}$ and conclude that the mean diameter of steel shafts is not equal to 0.255.
+
+\subsection*{(c)} \enspace The P-value is obtained as below.
+<<>>=
+#P-value using Z-test
+2*pnorm(-abs(z_score))
+@
+
+\subsection*{(d)} \enspace A 95\% confidence interval on the mean shaft diameter is constructed as below.
+<<>>=
+lower <- y_bar-(Z*(sigma/sqrt(n)))
+upper <- y_bar+(Z*(sigma/sqrt(n)))
+c(CI_lower = lower, CI_upper = upper)
+@
+Therefore, we obtained a 95\% confidence interval where 0.254438 $\leq$ $\mu$ $\leq$ 0.254562. 
+
+
+\pagebreak
+
+
+\section{Question 2.22}
+
+\subsection*{(a)} \enspace Let $\mu$ be the mean shelf life in days.  
+
+  $H_{0}$ : $\mu$ = 120  
+  
+  $H_{a}$ : $\mu$ $>$ 120
+  
+\subsection*{(b)} \enspace Since $\sigma$ is unknown, we will need to use t-test.
+<<>>=
+days <- c(108, 124, 124, 106, 115, 138, 163, 159, 134, 139)
+alpha <- 0.01
+n <- 10
+t.test(days, mu = 120, alternative = "greater")
+
+#Critical value
+abs(qt(alpha, n-1))
+@
+As a result, we have $t_{0.01,9}$ = 2.8214 and 1.7798 $<$ 2.8214. Therefore, we do not reject $H_{0}$ and conclude that the mean shelf life is 120 days. 
+
+\subsection*{(c)} \enspace The P-value is obtained as below.
+<<>>=
+t.test(days, mu = 120, alternative = "greater")$p.value
+@
+
+\subsection*{(d)} \enspace A 99\% confidence interval on the mean shelf life is constructed as below.
+<<>>=
+t.test(days, mu = 120, alternative = "two.sided", 
+       conf.level = 0.99)$conf.int 
+@
+Therefore, we have 110.914 $\leq$ $\mu$ $\leq$ 151.086.
+
+
+\pagebreak
+
+
+\section{Question 2.26}
+
+\subsection*{(a)} \enspace Let $\mu_{1}$ be the mean of machine 1 and $\mu_{2}$ be the mean of machine 2.  
+
+  $H_{0}$ : $\mu_{1}$ = $\mu_{2}$
+  
+  $H_{a}$ : $\mu_{1}$ $\ne$ $\mu_{2}$
+  
+
+\subsection*{(b)} \enspace Under the null hypothesis $\mu_{1}$ = $\mu_{2}$, and since $\sigma$ is known, we need to calculate the Z test statistics and compare it with the significant value at $\alpha$ = 0.05.
+<<>>=
+machine1 <- c(16.03, 16.04, 16.05, 16.05, 16.02, 16.01, 
+              15.96, 15.98, 16.02, 15.99)
+machine2 <- c(16.02, 15.97, 15.96, 16.01, 15.99, 16.03, 
+              16.04, 16.02, 16.01, 16.00)
+BSDA::z.test(x = machine1, y = machine2, alternative = "two.sided", 
+             sigma.x = 0.015, sigma.y = 0.018, conf.level = 0.95)
+@
+Based on the result, -$Z_{0.025}$ = -1.96 $<$ 1.3496 $<$ $Z_{0.025}$ = 1.96, we do not reject $H_{0}$ and conclude that the mean of two machines are the same. 
+
+\subsection*{(c)} \enspace The P-value is obtained as below.
+<<>>=
+BSDA::z.test(x = machine1, y = machine2, alternative = "two.sided", 
+             sigma.x = 0.015, sigma.y = 0.018, conf.level = 0.95)$p.value
+@
+
+\subsection*{(d)} \enspace A 95\% confidence interval on the difference in the mean of two machines is constructed as below. 
+<<>>=
+BSDA::z.test(x = machine1, y = machine2, alternative = "two.sided", 
+             sigma.x = 0.015, sigma.y = 0.018, conf.level = 0.95)$conf.int
+@
+Therefore, the 95\% confidence interval is -0.0045 $\leq$ $\mu_{1}$ - $\mu_{2}$ $\leq$ 0.0245.
+
+
+\pagebreak
+
+
+\section{Question 2.30}
+
+\subsection*{(a)} \enspace Let $\sigma_{1}^2$ be the variance of treatment 1 and $\sigma_{2}^2$ be the variance of treatment 2.  
+
+  $H_{0}$ : $\sigma_{1}^2$ = $\sigma_{2}^2$
+  
+  $H_{a}$ : $\sigma_{1}^2$ $\ne$ $\sigma_{2}^2$
+<<>>=
+y_bar1 <- 12.5; s_square1 <- 101.17; n1=8
+y_bar2 <- 10.2; s_square2 <- 94.73; n2=9
+F0 <- s_square1/s_square2
+round(F0,3)
+#F-critical 
+round(qf(c(0.025,0.975), n1-1, n2-1), 3)
+@
+Based on the result, $F_{0.975,7,8}$ = 0.204 $<$ $F_{0}$ = 1.068 $<$ $F_{0.025,7,8}$ = 4.529, we do not reject $H_{0}$ and conclude that the two variances are equal at $\alpha$ = 0.05.  
+
+\subsection*{(b)} \enspace Let $\mu_{1}$ be the mean of first treatment and $\mu_{2}$ be the mean of second treatment.  
+
+  $H_{0}$ : $\mu_{1}$ = $\mu_{2}$
+  
+  $H_{a}$ : $\mu_{1}$ $\ne$ $\mu_{2}$  
+  
+  Since previously we have determined $\sigma_{1}^2$ = $\sigma_{2}^2$, then we will need to use the pooled variance calculation.
+<<>>=
+Sp_square <- ((n1-1)*s_square1 + (n2-1)*s_square2) / (n1+n2-2)
+Sp_square
+Sp <- sqrt(Sp_square)
+t0 <- (y_bar1-y_bar2) / (Sp*(sqrt((1/n1) +(1/n2))))
+t0
+#t critical 
+abs(qt(0.05, n1+n2-2))
+@
+Based on the result, the pooled variance $s_{p}^2$ = 97.735, and we have obtained a t test statistic $t_{0}$ = 0.479, which -$t_{0.05,15}$ = -1.753 $<$ 0.479 $<$ $t_{0.05,15}$ = 1.753. Therefore, we do not reject $H_{0}$ and conclude that there is no significant evidence to say that the filtering device has reduced the percentage of impurity since their means are the same. 
+
+
+\pagebreak
+
+
+\section{Question 2.38}
+
+\enspace \enspace \enspace Let $\mu_{1}$ be the mean deflection temperature under load for formulation 1 and $\mu_{2}$ be the mean deflection temperature under load for formulation 2. First, we will need to perform a test to see whether the two variances are the same.  
+
+  $H_{0}$ : $\sigma_{1}^2$ = $\sigma_{2}^2$
+  
+  $H_{a}$ : $\sigma_{1}^2$ $\ne$ $\sigma_{2}^2$
+
+<<>>=
+Formulation1 <- c(206, 188, 205, 187, 193, 207, 185, 189, 
+                  192, 210, 194, 178)
+Formulation2 <- c(177, 197, 206, 201, 176, 185, 200, 197, 
+                  198, 188, 189, 203)
+
+var.test(Formulation1, Formulation2)
+@
+Based on the result, we obtained a P-value of 0.9419 $>$ 0.05. So, we do not reject $H_{0}$ and indicate that the variances of the two groups are the same. Then, we would like to test whether the difference between mean temperatures is greater than 3.  
+
+  $H_{0}$ : $\mu_{1}$ - $\mu_{2}$ = 3
+  
+  $H_{a}$ : $\mu_{1}$ - $\mu_{2}$ $>$ 3 
+<<>>=
+t.test(Formulation1, Formulation2, alternative = "greater", 
+       mu=3, var.equal = T, conf.level = 0.95)
+@
+By performing a two-samples t-test, we obtained a P-value of 0.648 $>$ 0.05. Therefore, we do not reject $H_{0}$ and conclude that there is no significant evidence to claim that the mean deflection temperature under load for formulation 1 exceeds that of formulation 2 by at least 3$\degree$F.
+
+
+\pagebreak
+
+
+\section{Question 3.14} 
+
+\subsection*{(a)} \enspace Let $\mu_{15}$ be the mean of tensile strength for cotton level of 15, and similiarly we can define $\mu_{20}$, $\mu_{25}$, $\mu_{30}$, $\mu_{35}$.  
+
+  $H_{0}$ : $\mu_{15}$ = $\mu_{20}$ = $\mu_{25}$ = $\mu_{30}$ = $\mu_{35}$
+  
+  $H_{a}$ : at least one $\mu_{i}$ is different than the other, where i $\in$ \{15, 20, 25, 30, 35\} 
+<<>>=
+cotton_data <- data.frame(Cotton_Weight_Percent = 
+                                  c(rep(15, 5), rep(20, 5), rep(25, 5), 
+                                    rep(30, 5), rep(35, 5)), 
+                          Observations = 
+                                  c(7, 7, 15, 11, 9, 12, 17, 12, 18, 
+                                    18, 14, 19, 19, 18, 18, 19, 25, 
+                                    22, 19, 23, 7, 10, 11, 15, 11))
+cotton_data$Cotton_Weight_Percent <- as.factor(cotton_data$Cotton_Weight_Percent)
+fit <- lm(Observations~Cotton_Weight_Percent, data=cotton_data)
+anova(fit)
+
+#F critical
+qf(0.95, 4, 20)
+@
+Based on the result, we have $F_{0}$ = 14.757 $>$ $F_{0.05, 4, 20}$ = 2.866. Therefore, we reject $H_{0}$ and conclude that at least one of the mean of tensile strength of cottons is not equal to other. That says, there is evidence to support the claim that cotton content affects the mean tensile strength. 
+
+\subsection*{(b)} \enspace
+<<message=F, warning=F>>=
+library(agricolae)
+LSD.test(cotton_data$Observations, cotton_data$Cotton_Weight_Percent, 
+         DFerror = 20, MSerror = 8.06, console = TRUE)
+@
+By performing LSD method, we obtained the result that there are significant differences between the pairs of means {\bfseries besides} the groups of 20,25 and 15,35. That says, $|{\bar{y}_\text{20.}} - {\bar{y}_\text{25.}}|$ $\not>$ LSD, and $|{\bar{y}_\text{15.}} - {\bar{y}_\text{35.}}|$ $\not>$ LSD.
+
+\subsection*{(c)} \enspace
+<<fig.height=6, fig.width=9>>=
+res <- aov(fit)
+par(mfrow=c(1,2))
+plot(res, 1); plot(res, 2)
+@
+The model assumptions of normality and constant variance do not seem to be satisfied in this case. The residue vs. fitted plot suggests that there tends to have a larger variance at the beginning than at the end. Also, the middle part does not seem to have a constant variance. That says, it does not satisfy the assumption that there should be a constant band throughout the graph. On the other hand, the qqplot shows that most of the points are off the theoretical line. We would like to see a straight line pattern if the error distribution is normal.  
+
+\vspace{0.5cm}
+
+However, in order to fully justify the assumptions, we need to run Bartlett test and Shapiro-Wilk's test which are tests of constant variance and normality. Therefore, our hypothesis becomes:  
+
+  $H_{0}$ : Variances are equal for across the treatments  
+  
+  $H_{a}$ : Variances are not equal.  
+  
+  Similarly, we will need to test whether data follows a normal distribution under null hypothesis using Shapiro-Wilk's test. 
+<<>>=
+#Constant Variance; H0: all variances are equal
+bartlett.test(cotton_data$Observations, cotton_data$Cotton_Weight_Percent)
+
+# H0: Data follows a normal distribution
+shapiro.test(cotton_data$Observations)
+@
+Based on the result, both tests suggest obtained P-values $>$ 0.05 which leads us to do not reject $H_{0}$ and conclude that the variances are equal across the treatments and data follows a normal distribution. Therefore, the assumptions are not violated.   
+
+
+\pagebreak
+
+
+\section{Question 3.15}
+\enspace \enspace \enspace Let $\mu_{15}$ be the mean of tensile strength for cotton level of 15, and similiarly we can define $\mu_{20}$, $\mu_{25}$, $\mu_{30}$, $\mu_{35}$. Given that the control group is level 30. 
+
+  $H_{0}$ : $\mu_{15}$ = $\mu_{30}$
+  
+  $H_{a}$ : $\mu_{15}$ $\ne$ $\mu_{30}$  
+  
+  Similarly, by performing Dunnett's test, we will need to test whether $\mu_{20}$ = $\mu_{30}$, $\mu_{25}$ = $\mu_{30}$, $\mu_{35}$ = $\mu_{30}$. 
+<<>>=
+cotton_data <- data.frame(Cotton_Weight_Percent = 
+                                  c(rep(15, 5), rep(20, 5), rep(25, 5), 
+                                    rep(30, 5), rep(35, 5)), 
+                          Observations = 
+                                  c(7, 7, 15, 11, 9, 12, 17, 12, 18, 
+                                    18, 14, 19, 19, 18, 18, 19, 25, 22, 
+                                    19, 23, 7, 10, 11, 15, 11))
+cotton_data$Cotton_Weight_Percent <- as.factor(cotton_data$Cotton_Weight_Percent)
+fit <- lm(Observations~Cotton_Weight_Percent, data=cotton_data)
+
+y15_bar <- mean(cotton_data[cotton_data$Cotton_Weight_Percent==15,]$Observations)
+y20_bar <- mean(cotton_data[cotton_data$Cotton_Weight_Percent==20,]$Observations)
+y25_bar <- mean(cotton_data[cotton_data$Cotton_Weight_Percent==25,]$Observations)
+y30_bar <- mean(cotton_data[cotton_data$Cotton_Weight_Percent==30,]$Observations)
+y35_bar <- mean(cotton_data[cotton_data$Cotton_Weight_Percent==35,]$Observations)
+
+MSe <- anova(fit)[2,3]
+d <- 2.65  #From Appendix Table VI
+
+#Number of observations within treatments; 
+ni <- 5  #all treatments have the same number of observations
+
+abs(y15_bar - y30_bar) > d * sqrt((2*MSe)/ni)
+abs(y20_bar - y30_bar) > d * sqrt((2*MSe)/ni)
+abs(y25_bar - y30_bar) > d * sqrt((2*MSe)/ni)
+abs(y35_bar - y30_bar) > d * sqrt((2*MSe)/ni)
+@
+Based on the result, we only have $|{\bar{y}_\text{25.}} - {\bar{y}_\text{30.}}|$ $\not>$ $d_{0.05}(4,20)$$\sqrt{ \frac{2*MS_{E}}{n_{i}} }$. This suggests that we only reject the null hypothesis $H_{0}$ : $\mu_{25}$ = $\mu_{30}$ and conclude that the difference in mean between 25 percent cotton and the control group(30 percent) is not significant. Other than that, all the other percent cotton content are significant different than the control. 
+
+
+\pagebreak
+
+
+\section{Question 3.16}
+
+\subsection*{(a)} \enspace Let $\mu_{20}$ be the mean of bioactivity at dosage level of 20g. Similarly, we can define $\mu_{30}$ and $\mu_{40}$.  
+
+  $H_{0}$ : $\mu_{20}$ = $\mu_{30}$ = $\mu_{40}$
+  
+  $H_{a}$ : at least one $\mu_{i}$ is different than the other, where i $\in$ \{20, 30, 40\}
+<<>>=
+drug_data <- data.frame(Dosage=c(rep(20,4), rep(30,4), rep(40,4)), 
+                        Bioactivity=c(24, 28, 37, 30, 37, 44, 31, 
+                                      35, 42, 47, 52, 38))
+drug_data$Dosage <- as.factor(drug_data$Dosage)
+
+fit <- lm(Bioactivity ~ Dosage, data=drug_data)
+anova(fit)
+
+#F critical 
+qf(0.95, 2, 9)
+@
+Since $F_{0}$ = 7.036 $>$ $F_{0.05,2,9}$ = 4.256, therefore we reject $H_{0}$ and conclude that at least one mean is different than the other. And there is a significant evidence to indicate that dosage level affects bioactivity. 
+
+
+\subsection*{(b)} \enspace In order to compare the pairs of means, we will need to perform Tukey's test. And we will set up our hypothesis test as:  
+
+  $H_{0}$ : $\mu_{20}$ = $\mu_{30}$
+  
+  $H_{a}$ : $\mu_{20}$ $\ne$ $\mu_{30}$  
+  
+  Similarly, we will need to test whether $\mu_{20}$ = $\mu_{40}$ and $\mu_{30}$ = $\mu_{40}$. 
+<<>>=
+TukeyHSD(aov(Bioactivity ~ Dosage, data=drug_data), conf.level = 0.95)
+@
+Based on the result, the P-value of 20-30 and 30-40 pairs are 0.24 and 0.17 which are $>$ 0.05. Therefore, we do not reject $H_{0}$ and conclude that {\bfseries only} the pair of means between Dosage 20g and 40g are significantly different than other. 
+
+
+\subsection*{(c)} \enspace
+<<fig.height=6, fig.width=9, message=FALSE>>=
+res <- aov(fit)
+par(mfrow=c(1,2))
+plot(res, 1); plot(res, 2)
+@
+From the residual vs fitted value graph, we can tell that there is no issue with the constant variance assumption. The qqplot suggests that most of the points are off the line, but it does not seem to be a big issue. However, we still need to check these assumptions using Bartlett test and Shapiro-Wilk's test since graphs do not clearly explain.  
+
+  $H_{0}$ : Variances are equal for across the treatments  
+  
+  $H_{a}$ : Variances are not equal.  
+  
+  Similarly, we will need to test whether data follows a normal distribution under null hypothesis using Shapiro-Wilk's test. 
+<<>>=
+#Constant Variance; H0: all variances are equal
+bartlett.test(drug_data$Bioactivity, drug_data$Dosage)
+
+# H0: Data follows a normal distribution
+shapiro.test(drug_data$Bioactivity)
+@
+From the outputs above, we can see that both test results suggest P-values $>$ 0.05. Therefore, we reject $H_{0}$ and conclude that the assumptions of constant variance and normality are not violated. 
+
+
+\pagebreak
+
+
+\section{Question 3.22}
+
+\subsection*{(a)} \enspace Let $\mu_{1}$ be the mean of tube conductivity of coating type 1. Similarly, we can define $\mu_{2}$, $\mu_{3}$, $\mu_{4}$.  
+
+  $H_{0}$ : $\mu_{1}$ = $\mu_{2}$ = $\mu_{3}$ = $\mu_{4}$
+  
+  $H_{a}$ : at least one $\mu_{i}$ is different than the other, where i $\in$ \{1, 2, 3, 4\} 
+<<>>=
+coat_data <- data.frame(Coating_Type=c(rep(1,4), rep(2,4), rep(3,4), 
+                                       rep(4,4)), 
+                        Conductivity=c(143, 141, 150, 146, 152, 149, 
+                                       137, 143, 134, 136, 132, 127, 
+                                       129, 127, 132, 129))
+coat_data$Coating_Type <- as.factor(coat_data$Coating_Type)
+
+fit <- lm(Conductivity ~ Coating_Type, data=coat_data)
+anova(fit)
+
+#F critical
+qf(0.95, 3, 12)
+@
+Since $F_{0}$ = 14.302 $>$ $F_{0.05,3,12}$ = 3.49, we reject $H_{0}$ and conclude that there is at least one mean is different than the other. Therefore, we can say that there is significant difference in conductivity due to coating type. 
+
+
+\subsection*{(b)} \enspace The estimated overall mean and treatment effects are shown below. 
+<<>>=
+mu_hat <- sum(coat_data$Conductivity)/nrow(coat_data)
+y1_bar <- mean(coat_data[coat_data$Coating_Type==1,]$Conductivity)
+y2_bar <- mean(coat_data[coat_data$Coating_Type==2,]$Conductivity)
+y3_bar <- mean(coat_data[coat_data$Coating_Type==3,]$Conductivity)
+y4_bar <- mean(coat_data[coat_data$Coating_Type==4,]$Conductivity)
+
+tau1_hat <- y1_bar - mu_hat
+tau2_hat <- y2_bar - mu_hat
+tau3_hat <- y3_bar - mu_hat
+tau4_hat <- y4_bar - mu_hat
+
+mu_hat
+c(tau1_hat, tau2_hat, tau3_hat, tau4_hat)
+@
+The estimated overall mean $\hat\mu$ = 137.9375, and treament effects $\hat\tau_{1}$ = 7.0625, $\hat\tau_{2}$ = 7.3125, $\hat\tau_{3}$ = -5.6875, $\hat\tau_{4}$ = -8.6875. 
+
+\subsection*{(c)} \enspace
+<<>>=
+# N-a = 12
+mse <- 19.688   #From previous anova result
+moe <- qt(0.975, 12) * sqrt(mse/4)
+upper <- y4_bar + moe
+lower <- y4_bar - moe
+round(c(lower, upper), 2)
+@
+A 95\% confidence interval on estimated mean of coating type 4 is 124.42 $\leq$ $\mu_{4}$ $\leq$ 134.08.  
+
+Now, we are also interested in finding the confidence interval for $\mu_{1}$ - $\mu_{4}$. 
+<<>>=
+moe <- qt(0.995, 12) * sqrt(2*mse/4)
+upper <- (y1_bar-y4_bar) + moe
+lower <- (y1_bar-y4_bar) - moe
+round(c(lower, upper), 2)
+@
+A 99\% confidence interval on the mean difference between coating types 1 and 4 is 6.17 $\leq$ $\mu_{1}$ - $\mu_{4}$ $\leq$ 25.33.
+
+
+\subsection*{(d)} \enspace Testing all pairs of means using the Fisher LSD, we will need to state our hypothesis test as:  
+
+  $H_{0}$ : $\mu_{1}$ = $\mu_{2}$ 
+  
+  $H_{a}$ : $\mu_{1}$ $\ne$ $\mu_{2}$  
+  
+  Similarly, we need to test whether $\mu_{1}$ = $\mu_{3}$, $\mu_{1}$ = $\mu_{4}$, $\mu_{2}$ = $\mu_{3}$, $\mu_{2}$ = $\mu_{4}$, $\mu_{3}$ = $\mu_{4}$. 
+<<>>=
+LSD <- qt(0.975, 12) * sqrt(2*mse/4)
+LSD
+
+abs(y1_bar - y2_bar) > LSD
+abs(y1_bar - y3_bar) > LSD
+abs(y1_bar - y4_bar) > LSD
+abs(y2_bar - y3_bar) > LSD
+abs(y2_bar - y4_bar) > LSD
+abs(y3_bar - y4_bar) > LSD
+@
+Since $|{\bar{y}_\text{1.}} - {\bar{y}_\text{2.}}|$ $\not>$ LSD and $|{\bar{y}_\text{3.}} - {\bar{y}_\text{4.}}|$ $\not>$ LSD, we conclude that the {\bfseries only} pairs of means are {\bfseries not} significanly different are types 1 and 2, and types 3 and 4. Other groups are significantly different than the other.  
+
+Alternatively, we can run the following code which gives the same result. 
+<<>>=
+TukeyHSD(aov(Conductivity ~ Coating_Type, data=coat_data), conf.level = 0.95)
+@
+
+
+\subsection*{(e)} \enspace
+<<message=FALSE, warning=FALSE, fig.height=5, fig.width=5>>=
+library(gplots)
+plotmeans(Conductivity ~ Coating_Type, data = coat_data,
+          xlab = "Coating Type(Treatment)", ylab = "Conductivity",
+          main="Mean Plot with 95% CI") 
+@
+From the graph we can see that there are not much different between group 1 and 2, and group 3 and 4. This follows the results from previous question. Also, coating type 2 produces the highest conductivity since it has the largest mean value. 
+
+\subsection*{(f)} \enspace 
+<<>>=
+c(y1_bar, y2_bar, y3_bar, y4_bar)
+@
+Assuming that coating type 4 is currently being used, we can alternatively choose type 3 coating since there is no significantly different between type 3 and type 4 as the result suggested from part d. However, in order to minimize conductivity, there is no need to switch to type 3 since type 4 has the lowest mean conductivity. 
+
+
+\pagebreak
+
+
+\section{Question 3.34}
+
+\subsection*{(a)} \enspace Let $\sigma_{\tau}^2$ be the variance component through treatments.  
+
+  $H_{0}$ : $\sigma_{\tau}^2$ = 0 
+  
+  $H_{a}$ : $\sigma_{\tau}^2$ $>$ 0 
+<<>>=
+calcium_data <- data.frame(Batch=c(rep(1,5), rep(2,5), rep(3,5), 
+                                   rep(4,5), rep(5,5)), 
+                           Calcium=c(23.46, 23.48, 23.56, 23.39, 23.40, 
+                                     23.59, 23.46, 23.42, 23.49, 23.50, 
+                                     23.51, 23.64, 23.46, 23.52, 23.49, 
+                                     23.28, 23.40, 23.37, 23.46, 23.39, 
+                                     23.29, 23.46, 23.37, 23.32, 23.38))
+calcium_data$Batch <- as.factor(calcium_data$Batch)
+
+fit <- lm(Calcium ~ Batch, data=calcium_data)
+anova(fit)
+
+#F critical
+qf(0.95, 4, 20)
+@
+Since $F_{0}$ = 5.535 $>$ $F_{0.05,4,20}$ = 2.866, we reject $H_{0}$ and conclude that variability exists between treatments. That says, there is significant variation in calcium content from batch to batch. 
+
+\subsection*{(b)} \enspace The esimated of components of variance is shown below.
+<<>>=
+#sigma^2 = MSe  
+MSe = 0.00438   #From previous anova result
+sigma_square <- MSe
+#sigma^2_tau = (MStrt-MSe)/n
+MStrt <- 0.024244   #From anova result
+sigma_square_tau <- (MStrt - MSe) / 5
+
+c(sigma_square, sigma_square_tau)
+@
+The $\hat\sigma^2$ is 0.00438 and $\hat\sigma_{\tau}^2$ is 0.00397.
+
+\subsection*{(c)} \enspace A 95\% confidence interval for $\frac{\sigma_{\tau}^2}{\sigma_{\tau}^2 + \sigma^2}$ is constructed below. 
+<<>>=
+L <- ( ((MStrt/MSe)/qf(0.975, 4, 20)) -1 ) / 5
+U <- ( ((MStrt/MSe)/qf(0.025, 4, 20)) -1 ) / 5
+lower <- L/(1+L)
+upper <- U/(1+U)
+round(c(lower, upper), 3)
+@
+Therefore, we have a 95\% confidence interval 0.103 $\leq$ $\frac{\sigma_{\tau}^2}{\sigma_{\tau}^2 + \sigma^2}$ $\leq$ 0.903. 
+
+\subsection*{(d)} \enspace
+<<fig.height=6, fig.width=9>>=
+res <- aov(fit)
+par(mfrow=c(1,2))
+plot(res, 1); plot(res, 2)
+@
+From the residual plots above, we can say that the assumptions of constant variance and normality do not seem to be satisfied. From the residuals vs fitted values plot, we can clearly see that there are more points below 0 at the end, while we desire to see a constant band throughout the graph. From the qqplot on the right, we can see that most of the points are off the line. Also, it is clear to see that the points at the tail are far away from the theoretical line. In order to further discover the assumptions, we will need to do the Bartlett test and Shapiro-Wilk's test once again.  
+
+  $H_{0}$ : Variances are equal for across the treatments  
+  
+  $H_{a}$ : Variances are not equal.  
+  
+  Similarly, we will need to test whether data follows a normal distribution under null hypothesis using Shapiro-Wilk's test. 
+<<>>=
+#Constant Variance; H0: all variances are equal
+bartlett.test(calcium_data$Calcium, calcium_data$Batch)
+
+# H0: Data follows a normal distribution
+shapiro.test(calcium_data$Calcium)
+@
+From the results above, we can see that both P-values are $>$ 0.05 which leads us to reject $H_{0}$ and conclude that the assumptions of constant variance and normality are not violated. 
+  
+\subsection*{(e)} \enspace
+<<message=FALSE>>=
+library(lme4)
+fit.rand <- lmer(Calcium ~ (1|Batch), data = calcium_data, REML = TRUE) 
+summary(fit.rand)
+confint(fit.rand)
+
+#Chi-sqaure CI 
+lower <- (20*MSe) / qchisq(0.975, df=20) #N-a = 20
+upper <- (20*MSe) / qchisq(0.025, df=20)
+c(lower, upper)
+@
+The 95\% confidence interval on $\sigma^2$ from REML is 0.04997 $\leq$ $\sigma^2$ $\leq$ 0.09349. And the 95\% exact chi-square confidence interval on $\sigma^2$ is 0.00256 $\leq$ $\sigma^2$ $\leq$ 0.00913. 
+
+
+
+\end{document}
