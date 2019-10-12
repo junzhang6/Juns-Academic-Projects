@@ -1,0 +1,269 @@
+\documentclass[12pt]{article}
+
+\title{STAT430 Assignment2}
+\author{Jiajun Zhang}
+
+\usepackage{float}
+\linespread{1.5}
+\usepackage[margin=1in]{geometry}
+
+\makeatletter
+\renewcommand{\@seccntformat}[1]{}
+\makeatother
+
+\usepackage{titlesec}
+\usepackage{amsmath}
+\usepackage{gensymb} %For use of temperature degree
+
+
+\begin{document}
+\maketitle
+
+\titleformat{\subsection}[runin]
+{\normalfont\large\bfseries}{\thesubsection}{1em}{} %For removing space b/w subsection and text    
+
+<<include=FALSE>>=
+library(knitr)
+opts_chunk$set(
+concordance=TRUE
+)
+@
+
+<<global_options, include=FALSE>>=
+knitr::opts_chunk$set(fig.pos = 'H')
+@
+
+
+\section{Question 4.8}
+
+\enspace \enspace \enspace Let $\mu_{1}$ be the mean of tensile strengths for treatment 1. Similarly, we can define $\mu_{2}$, $\mu_{3}$, and $\mu_{4}$. 
+Then, we will test:  
+
+  $H_{0}$ : $\mu_{1}$ = $\mu_{2}$ = $\mu_{3}$ = $\mu_{4}$
+  
+  $H_{a}$ : at least one $\mu_{i}$ is different than the other, where i $\in$ \{1, 2, 3, 4\}  
+<<>>=
+chem_data <- data.frame(Chemical=factor(c(rep(1,5), rep(2,5), rep(3,5), 
+                                          rep(4,5))), 
+                        Bolt=factor(rep(1:5,4)), 
+                        Tensile.Strength=c(73, 68, 74, 71, 67, 73, 67, 
+                                           75, 72, 70, 75, 68, 78, 73, 
+                                           68, 73, 71, 75, 75, 69))
+anova(lm(Tensile.Strength~Chemical+Bolt, data=chem_data))
+@
+Based on the result, we will not reject $H_{0}$ for treatments since 0.121 $>$ 0.05, and conclude that there is no significant difference in means among four chemicals. 
+
+
+\pagebreak
+
+
+\section{Question 4.9}
+
+\enspace \enspace \enspace Let $\mu_{1}$ be the mean of bacteria growth for washing solution 1. Similarly, we can define $\mu_{2}$, $\mu_{3}$.  
+
+  $H_{0}$ : $\mu_{1}$ = $\mu_{2}$ = $\mu_{3}$ 
+  
+  $H_{a}$ : at least one $\mu_{i}$ is different than the other, where i $\in$ \{1, 2, 3\}
+<<>>=
+bacteria_data <- data.frame(Solution=factor(c(rep(1,4), rep(2,4), rep(3,4))), 
+                        Days=factor(rep(1:4, 3)), 
+                        Observations=c(13, 22, 18, 39, 16, 24, 17, 44, 
+                                       5, 4, 1, 22))
+anova(lm(Observations~Solution+Days, data=bacteria_data))
+@
+Based on the result, we have a p-value of 0.0003 $<$ 0.05. Therefore, we will reject $H_{0}$ and conclude that there is significant difference in means among three washing solutions. In order to determine which treatment is significant different than the other, we will run the LSD test. 
+
+<<warning=FALSE, message=FALSE>>=
+library(agricolae)
+LSD.test(bacteria_data$Observations, bacteria_data$Solution, DFerror=6, 
+         MSerror=8.64, console=T)
+@
+From the LSD test, we can see that there is no significant difference between treatments 1 and 2. Alternatively, we can conclude that there is significant difference in means between washing solutions 1 \& 3 and solutions 2 \& 3. 
+
+
+\pagebreak
+
+
+\section{Question 4.14}
+
+\subsection*{(a)} \enspace Let $\mu_{1}$ be the mean of fuel comsumption for treatment(oil) 1. Similarly, we can define $\mu_{2}$ and $\mu_{3}$.  
+
+  $H_{0}$ : $\mu_{1}$ = $\mu_{2}$ = $\mu_{3}$ 
+  
+  $H_{a}$ : at least one $\mu_{i}$ is different than the other, where i $\in$ \{1, 2, 3\}
+
+<<>>=
+truck_data <- data.frame(Oil=factor(c(rep(1,5), rep(2,5), rep(3,5))), 
+                        Truck=factor(rep(1:5, 3)), 
+                        Consumptions=c(0.500, 0.634, 0.487, 0.329, 0.512, 
+                                       0.535, 0.675, 0.520, 0.435, 0.540, 
+                                       0.513, 0.595, 0.488, 0.400, 0.510))
+anova(lm(Consumptions~Oil+Truck, data=truck_data))
+@
+From the result, we can see that the p-value of oil is 0.022 $<$ 0.05 which leads us to reject $H_{0}$ and conclude that there is a significant difference in means of fuel consumptions among three lubricating oils.   
+
+\subsection*{(b)} \enspace
+<<>>=
+LSD.test(y=truck_data$Consumptions, trt=truck_data$Oil, DFerror=8, 
+         MSerror=0.0005278, console=T)
+@
+From the LSD test result, we can conclude that there are significant differences in means between type 2 \& 3 oils, and type 2 \& 1 oils. 
+
+\subsection*{(c)} \enspace
+<<fig.height=6, fig.width=9>>=
+res <- aov(lm(Consumptions~Oil+Truck, data=truck_data))
+par(mfrow=c(1,2))
+plot(res, 1); plot(res, 2)
+@
+It is hard to tell whether or not the assumptions of constant variance and normality are violated from the two graphs above. Therefore, we can perform Bartlett test and Shapiro-Wilk's test to investigate. Then, our hypothesis becomes:  
+
+  $H_{0}$ : Variances are equal for across the treatments  
+  
+  $H_{a}$ : At least one variance is different than the other.  
+  
+  Similarly, we will need to test whether data follows a normal distribution under null hypothesis using Shapiro-Wilk's test. 
+<<>>=
+#Constant Variance; H0: all variances are equal
+bartlett.test(truck_data$Consumptions, truck_data$Oil)
+
+# H0: Data follows a normal distribution
+shapiro.test(truck_data$Consumptions)
+@
+  Since the p-values from both result are greater than 0.05, we do not reject $H_{0}$ and conclude that the assumptions of constant variance and normality are not violated. 
+  
+  
+\pagebreak
+
+\section{Question 4.28}
+
+\enspace \enspace \enspace Let $\mu_{A}$ be the mean assembly time for treatment A. Similarly, we can define $\mu_{B}$, $\mu_{C}$, and $\mu_{D}$.  
+
+<<>>=
+engineer_data <- data.frame(Order.Assembly=factor(c(rep(1,4), rep(2,4), 
+                                                    rep(3,4), rep(4,4))), 
+                            Operator=factor(rep(1:4, 4)), 
+                            Methods=factor(c("C", "D", "A", "B", "B", "C", 
+                                              "D", "A", "A", "B", "C", "D", 
+                                              "D", "A", "B", "C")), 
+                            Time=c(10, 14, 7, 8, 7, 18, 11, 8, 5, 10, 11, 9, 
+                                   10, 10, 12, 14))
+anova(lm(Time~Order.Assembly+Operator+Methods, data=engineer_data))
+@
+  Since we obtained a p-value of treatments 0.004 $<$ 0.05, we will reject $H_{0}$ and conclude that there is a evidence to indicate that the mean assembly time is significantly different among assembly methods. To specify which treatment is different than the other, we can perform a LSD test. 
+<<>>=
+LSD.test(engineer_data$Time, engineer_data$Methods, DFerror=6, 
+         MSerror=1.75, console=T)
+@
+Based on the LSD test result, we will conclude that there are significant differences between methods A \& C, A \& D and B \& C.
+
+
+\pagebreak
+
+\section{Question 4.29}
+
+<<message=FALSE>>=
+bacteria_data <- data.frame(Solution=factor(c(rep(1,4), rep(2,4), rep(3,4))), 
+                        Days=factor(rep(1:4, 3)), 
+                        Observations=c(13, 22, 18, 39, 16, 24, 17, 44, 
+                                       5, 4, 1, 22))
+library(lme4)
+fit.rand <- lmer(Observations~Solution+(1|Days), data=bacteria_data, REML=T) 
+summary(fit.rand)
+@     
+  Now, the blocks(Days) are random, then the estimate block variance component is 120.11 as we obtained from the result. 
+  
+  
+\pagebreak
+
+\section{Question 4.41}
+
+\enspace \enspace \enspace By introducing a fourth factor, we denote them as a = $\beta$, b = $\gamma$, c = $\delta$, and d = $\alpha$.  
+As previous stated, we are interested in testing the differences among assembly methods (treatments). Let $\mu_{A}$ be the mean of assembly time for assembly method A. Similarly, we can define $\mu_{B}$, $\mu_{C}$, and $\mu_{D}$. Then, we will test:  
+
+  $H_{0}$ : $\mu_{A}$ = $\mu_{B}$ = $\mu_{C}$ = $\mu_{D}$
+  
+  $H_{a}$ : at least one $\mu_{i}$ is different than the other, where i $\in$ \{A, B, C, D\}
+<<>>=
+engineer_data <- data.frame(Order.Assembly=factor(c(rep(1,4), rep(2,4), 
+                                                    rep(3,4), rep(4,4))), 
+                            Operator=factor(rep(1:4, 4)), 
+                            Methods=factor(c("C", "B", "D", "A", 
+                                                "B", "C", "A", "D", 
+                                                "A", "D", "B", "C", 
+                                                "D", "A", "C", "B")),
+                            Workplace=factor(c("a", "b", "c", "d", 
+                                               "d", "c", "b", "a", 
+                                               "c", "d", "a", "b", 
+                                               "b", "a", "d", "c")),
+                            Time=c(11, 10, 14, 8, 8, 12, 10, 12, 9, 
+                                   11, 7, 15, 9, 8, 18, 6))
+anova(lm(Time~Order.Assembly+Operator+Methods+Workplace, data=engineer_data))
+@
+From the result, we have a p-value of 0.167 on treatments $>$ 0.05. Therefore, we will reject $H_{0}$ and conclude that there is no significant difference in means among assembly methods. 
+
+
+\pagebreak
+
+\section{Question 4.45}
+
+\enspace \enspace \enspace Let $\mu_{1}$ be the mean mileage for gasoline additive type 1. Similarly, we can define $\mu_{2}$, $\mu_{3}$, $\mu_{4}$, $\mu_{5}$.
+<<message=FALSE>>=
+gas_data <- data.frame(Additive=factor(c(rep(1,4), rep(2,4), rep(3,4), 
+                                       rep(4,4), rep(5,4))),
+                       Car=factor(c(2, 3, 4, 5, 1, 2, 4, 5, 1, 3, 4, 
+                                    5, 1, 2, 3, 4, 1, 2, 3, 5)), 
+                       Mileage=c(17, 14, 13, 12, 14, 14, 13, 10, 12, 
+                                 13, 12, 9, 13, 11, 11, 12, 11, 12, 
+                                 10, 8))
+
+fit <- lm(Mileage~Additive+Car, data=gas_data)
+library(car)
+Anova(fit, type=2)
+@
+Based on the result, we have the p-value on treatments is 0.0012 $<$ 0.05. Therefore, we reject $H_{0}$ and conclude that there is a significant difference in means among the types of gasoline additives. 
+
+<<>>=
+LSD.test(gas_data$Mileage, gas_data$Additive, DFerror=11, 
+         MSerror=10.017/11, console=T)
+@
+Based on the LSD test result, we will conclude that there is significant differences between gas additives type 1 \& 3, 1 \& 4, 1 \& 5, 2 \& 5, and 4 \& 5.  
+
+
+\pagebreak
+
+\section{Question 4.50}
+
+\enspace \enspace \enspace Let a be the number of treatments, b be the number of blocks, k be the number of treatments in each block, r be the number of times each treatment occurs in the design.  
+
+Now, we have a=4, b=6, k=2. And based on the formula, \[
+\lambda = \frac{r(k-1)}{a-1}
+\]
+\enspace \enspace \enspace Let $\lambda$=1, we will have r=3. That means each treatment occurs exactly three times in the design. Therefore, the design can be constructed as below. 
+<<>>=
+matrix(c("x", "x", "x", "", "", "", 
+         "x", "", "", "x", "x", "", 
+         "", "x", "", "x", "", "x",
+         "", "", "x", "", "x", "x"), 
+       nrow=4, ncol=6, byrow=T, dimnames=list(c("Treatment1", "Treatment2", 
+                                                "Treatment3", "Treatment4"), 
+                                              c("Block1", "Block2", "Block3", 
+                                                "Block4", "Block5", "Block6")))
+
+@
+
+
+\pagebreak
+
+\section{Question 4.54}
+
+\enspace \enspace \enspace Recall the formula, \[
+\lambda = \frac{r(k-1)}{a-1}
+\]
+\enspace \enspace \enspace Now, we have a=8, r=8, k=4. Therefore, \[ 
+\lambda = \frac{8(4-1)}{8-1} = \frac{24}{7}
+\]
+\enspace \enspace \enspace Since $\lambda$ is not integer, therefore we conclude that the BIBD with provided parameters does not exist. 
+
+
+
+\end{document}
