@@ -1,0 +1,284 @@
+\documentclass[12pt]{article}
+
+\title{STAT430 Assignment3}
+\author{Jiajun Zhang}
+
+\usepackage{float}
+\linespread{1.5}
+\usepackage[margin=1in]{geometry}
+
+\makeatletter
+\renewcommand{\@seccntformat}[1]{}
+\makeatother
+
+\usepackage{titlesec}
+\usepackage{amsmath}
+\usepackage{gensymb} %For use of temperature degree
+
+
+\begin{document}
+\maketitle
+
+\titleformat{\subsection}[runin]
+{\normalfont\large\bfseries}{\thesubsection}{1em}{} %For removing space b/w subsection and text    
+
+<<include=FALSE>>=
+library(knitr)
+opts_chunk$set(
+concordance=TRUE
+)
+@
+
+<<global_options, include=FALSE>>=
+knitr::opts_chunk$set(fig.pos = 'H')
+@
+
+\section{Question 5.8}
+
+<<>>=
+chemical_data <- data.frame(Temperature=factor(c(rep(150,6), rep(160,6), 
+                                                 rep(170,6))), 
+                            Pressure=factor(rep(c(200,200,215,215,230,230),3)), 
+                            Chem=c(90.4,90.2,90.7,90.6,90.2,90.4,90.1,90.3,
+                                   90.5,90.6,89.9,90.1,90.5,90.7,90.8,90.9,
+                                   90.4,90.1))
+@
+
+\subsection*{(a)} \enspace First denote a effects model: \[ 
+y_{ijk} = \mu + \tau_{i} + \beta_{j} + (\tau\beta)_{ij} + \epsilon_{ijk}
+\] 
+where $\tau_{i}$ is the effect of $i$th level of the row factor, $\beta_{j}$ is the effect of $j$th level of the column factor, $(\tau\beta)_{ij}$ is the effect of the interaction between $\tau_{i}$ and $\beta_{j}$, and $\epsilon_{ijk}$ is a random error component. And k is the numbers of replicate in each factor.  
+
+Now, we are interested in testing hypotheses about the equality of row treatment effects by stating:  
+
+      $H_{0}$ : $\tau_{1}$ = $\tau_{2}$ = $\tau_{3}$  
+      
+      $H_{a}$ : at least one $\tau_{i}$ is different than the other, where i $\in$ \{1, 2, 3\}  
+      
+Similarly, we can set our hypotheses for column treatment effects and interaction effects between row and column treatments. 
+<<>>=
+anova(lm(Chem~Temperature*Pressure,data=chemical_data))
+@
+Based on the result, we can see that the main effects of temperature and pressure are significant since we have both p-values less than 0.05. However, we see that the interaction effect is not significant as we obtained a p-value of 0.47 $>$ 0.05. Since We know both treatments are significant, we can further perform a LSD test to see which level of treatments are different.
+<<warning=FALSE, message=FALSE>>=
+library(agricolae)
+# Fisher LSD: Compare the temperature regardless of pressure. 
+LSD.test(chemical_data$Chem, chemical_data$Temperature, DFerror=9, 
+         MSerror=0.01778, console=T)
+# Fisher LSD: Compare the pressure regardless of temperautre. 
+LSD.test(chemical_data$Chem, chemical_data$Pressure, DFerror=9, 
+         MSerror=0.01778, console=T)
+@
+From the LSD test results, we can see that temperature level of 160 $\degree$C is different than temperature level of 170 $\degree$C. On the other hand, we observe that all the pressure levels are significantly different than the other. 
+
+
+\subsection*{(b)} \enspace
+<<fig.height=6, fig.width=9>>=
+fit <- aov(lm(Chem~Temperature*Pressure,data=chemical_data))
+par(mfrow=c(1,2))
+plot(fit, 1); plot(fit, 2)
+@
+There is nothing unusual with the residual vs fitted value plot as since we can observe from the above plot that there is a constant band throughout the graph. The normal QQplot shows that many points are off the theoretical line. However, in order to check whether the normality assumption fails, we can perform a Shapiro-Wilk's test.
+<<>>=
+# H0: Data follows a normal distribution
+shapiro.test(chemical_data$Chem)
+@
+Based on the result, we can conclude that the assumption of normality is satisified. 
+
+
+\subsection*{(c)} \enspace
+<<fig.height=4, fig.width=6>>=
+with(chemical_data, interaction.plot(x.factor=Pressure, 
+            trace.factor=Temperature, response=Chem, fun=mean, 
+            type="b", legend=T, pch=c(1,2,3), xlab="Pressure (psig)",
+            ylab="Average Yield of a chemical process", 
+            main="Interaction Plot (Temperature-Pressure)"))
+@
+From the interaction graph, we can see that under the condition temperature of 170 $\degree$C and pressure of 215 psig, we will have the highest chemical yield.
+
+
+\pagebreak
+
+\section{Question 5.14}
+
+\enspace \enspace \enspace We can construct a effects model same as the previous question. For drill speed effect:  
+
+      $H_{0}$ : $\tau_{1}$ = $\tau_{2}$  
+      
+      $H_{a}$ : $\tau_{1}$ is different than $\tau_{2}$
+      
+Similarly, we can set our hypotheses for column treatment effects and interaction effects between row and column treatments.   
+<<>>=
+mechanic_data <- data.frame(Drill.Speed=factor(c(rep(125,8), rep(200,8))), 
+                            Feed.Rate=factor(rep(c(0.015,0.015,0.030,0.030,
+                                                   0.045,0.045,0.060,0.060),2)),
+                            Thrust.Force=c(2.70,2.78,2.45,2.49,2.60,2.72,2.75,
+                                           2.86,2.83,2.86,2.85,2.80,2.86,2.87,
+                                           2.94,2.88))
+anova(lm(Thrust.Force~Drill.Speed*Feed.Rate, data=mechanic_data))
+@
+Based on the result, we can conclude that both treatments drill speed, feed rate and their interaction are significant since we have p-values less than 0.05. Therefore, we can perform LSD tests on both treatments and interaction. 
+
+<<>>=
+# Fisher LSD: Compare the drill speed regardless of feed rate. 
+LSD.test(mechanic_data$Thrust.Force, mechanic_data$Drill.Speed, DFerror=8, 
+         MSerror=0.0026, console=T)
+# Fisher LSD: Compare the feed rate regardless of drill speed. 
+LSD.test(mechanic_data$Thrust.Force, mechanic_data$Feed.Rate, DFerror=8, 
+         MSerror=0.0026, console=T)
+@
+From the LSD test results, we can see that the two drill speed levels are significant different. And for feed rate, we observe that feed rate of 0.06 and rate of 0.045, rate of 0.06 and 0.03, and rate of 0.045 and 0.03 are significant different.
+
+<<>>=
+mechanic_data$Interact <- with(mechanic_data, 
+                               interaction(Drill.Speed, Feed.Rate)) 
+int_fit <- aov(Thrust.Force~Interact, data=mechanic_data) 
+LSD.test(int_fit, "Interact", group=FALSE, console = TRUE) 
+@
+And by performing a LSD test on the treatments interaction, we can observe some significant difference between interactions by looking at the p-values result above. More importantly, we can see from the result that when the drill speed is 200 and feed rate is 0.06, the {\bfseries thrust force is maximized with an average value of 2.91}. This concludes that we shall operate the process under this condition.
+
+
+\pagebreak
+
+\section{Question 5.24}
+
+\enspace \enspace \enspace We can construct a effects model same as the previous question. For cycle time effect:  
+
+      $H_{0}$ : $\tau_{1}$ = $\tau_{2}$ = $\tau_{3}$ 
+      
+      $H_{a}$ : at least one $\tau_{i}$ is different than the other, where i $\in$ \{1, 2, 3\}
+      
+Similarly, we can set our hypotheses for the other two treatment effects, two-way interaction between each of the two treatments and three-way interaction. 
+<<>>=
+#Three-factor factorial design
+cloth_data <- data.frame(Cycle.Time=factor(c(rep(40,18),rep(50,18),rep(60,18))),
+                         Temperature=factor(rep(c(300,350),each=9,times=3)), 
+                         Operator=factor(rep(c(1,2,3),each=3,times=6)), 
+                         Cloth=c(23,24,25,27,28,26,31,32,29,24,23,28,38,36,35,
+                                 34,36,39,36,35,36,34,38,39,33,34,35,37,39,35,
+                                 34,38,36,34,36,31,28,24,27,35,35,34,26,27,25,
+                                 26,29,25,36,37,34,28,26,24))
+anova(lm(Cloth~Cycle.Time*Temperature*Operator, data=cloth_data))
+@
+Based on the result, we can see that only the interaction between temperature and operator is not significant since we have a p-value of 0.19 $>$ 0.05. Other than that, every other terms are significant. Therefore, we can perform LSD tests on three treatments. 
+<<>>=
+# Fisher LSD: Compare the cycle time regardless of temperature, operator. 
+LSD.test(cloth_data$Cloth, cloth_data$Cycle.Time, DFerror=36, 
+         MSerror=3.278, console=T)
+# Fisher LSD: Compare the temperature regardless of cycle time, operator. 
+LSD.test(cloth_data$Cloth, cloth_data$Temperature, DFerror=36, 
+         MSerror=3.278, console=T)
+# Fisher LSD: Compare the operator regardless of cycle time, temperature. 
+LSD.test(cloth_data$Cloth, cloth_data$Operator, DFerror=36, 
+         MSerror=3.278, console=T)
+@
+From the LSD test results, we can first see that cycle time level of 50 is significant different than levels of 40 and 60. Then, two temperature levels are significant different than each other. Moreover, three operator levels are also significant different than each other.  
+
+Then, we can also perform LSD tests on the two significant interactions.
+<<>>=
+cloth_data$CycleTemp <- with(cloth_data, 
+                               interaction(Cycle.Time, Temperature)) 
+CycleTemp_fit <- aov(Cloth~CycleTemp, data=cloth_data) 
+LSD.test(CycleTemp_fit, "CycleTemp", group=FALSE, console = TRUE) 
+@
+From this result, we can observe from the result that when the cycle time is 50 and temperatures of 300 and 350, the {\bfseries cloth scores are maximized with both average values of 35.556}.
+
+<<>>=
+cloth_data$CycleOperator <- with(cloth_data, 
+                               interaction(Cycle.Time, Operator)) 
+CycleOperator_fit <- aov(Cloth~CycleOperator, data=cloth_data) 
+LSD.test(CycleOperator_fit, "CycleOperator", group=FALSE, console = TRUE)
+@
+From this result, we can observe from the result that when the cycle time is 50 and operator is number 2, the {\bfseries cloth score is maximized with an average value of 36.5}.  
+
+Therefore, we shall consider operating the process by the conditions we concluded above.  
+
+Lastly, we need to check the model's adequacy(constant variance and normality assumptions). 
+
+<<fig.height=6, fig.width=9>>=
+fit <- aov(lm(Cloth~Cycle.Time*Temperature*Operator, data=cloth_data))
+par(mfrow=c(1,2))
+plot(fit, 1); plot(fit, 2)
+@
+The residuals vs fitted values plot and QQplot do not seem to have any unusual patterns. We can observe a constant band throughout the residuals vs fitted values plot and most of the points follow the theoretical line in the normal QQplot. 
+
+
+\pagebreak
+
+\section{Question 5.46}
+
+\subsection*{(a)} \enspace \[
+SS_{A} = 118.667 - (96.333 + 12.167 + 10.000) = 0.167
+\]
+
+\subsection*{(b)} \enspace \[
+DF_{A} = \frac{0.167}{0.0833} = 2 
+\]
+
+\subsection*{(c)} \enspace \[
+DF_{B} = \frac{96.333}{96.3333} = 1 
+\]
+
+\subsection*{(d)} \enspace \[
+MS_{E} = \frac{10.000}{6} = 1.667 
+\]
+
+\subsection*{(e)} \enspace
+<<>>=
+pf(3.65, df1=2, df2=6, lower.tail=F)
+@
+The p-value for the interaction test statistic is 0.09.
+
+\subsection*{(f)} \enspace We know the degree freedom for factor A is 2. Therefore, there are 2 + 1 = 3 levels. 
+
+\subsection*{(g)} \enspace Similarly, we know there are 1 + 1 = 2 levels in factor B.
+
+\subsection*{(h)} \enspace We know the $DF_{error}$ = $ab(n-1)$, and we know a = 3, b = 2, and $DF_{error}$ = 6. Therefore, n = 2 which suggests that there are 2 replicates in this experiment.  
+\subsection*{(i)} \enspace No, since we don't find the interaction between factor B and factor A is significant where we obtained a p-value greater than 0.05.  
+
+\subsection*{(j)} \enspace \[
+\hat\sigma = \sqrt{\frac{10}{6}} = 1.29
+\]
+
+
+\pagebreak
+
+\section{Question 5.52}
+
+\subsection*{(a)} \enspace True. 
+\[
+SS_{error} = 185 - (50 + 80 + 30 + 10) = 15
+\]
+\[
+DF_{error} = 11 - (1 + 2 + 2 + 1) = 5  
+\]
+\[ 
+\hat\sigma = \sqrt{\frac{15}{5}} = 1.73
+\]
+
+\subsection*{(b)} \enspace 
+\[
+DF_{error} = 11 - (1 + 2 + 2) = 6
+\]
+
+\subsection*{(c)} \enspace 
+\[
+SS_{error} = 185 - (50 + 80 + 30) = 25 
+\]
+\[
+MS_{error} = \frac{25}{6} = 4.167
+\]
+
+\subsection*{(d)} \enspace False, since $F_{0}$ = 3.6 less than the critical F value. Not significant. 
+<<>>=
+#F critical 
+qf(0.95, 2, 6)
+@
+
+\[
+F_{0} = \frac{MS_{AB}}{MS_{error}} = \frac{15}{4.167} = 3.6
+\]
+
+
+
+\end{document}

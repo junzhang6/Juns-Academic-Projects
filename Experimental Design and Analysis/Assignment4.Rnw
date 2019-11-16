@@ -1,0 +1,715 @@
+\documentclass[10pt]{article}
+
+\title{STAT430 Assignment4}
+\author{Jiajun Zhang}
+
+\usepackage{float}
+\linespread{1.5}
+\usepackage[margin=1in]{geometry}
+
+\makeatletter
+\renewcommand{\@seccntformat}[1]{}
+\makeatother
+
+\usepackage{titlesec}
+\usepackage{amsmath}
+\usepackage{gensymb} %For use of temperature degree
+
+
+\begin{document}
+\maketitle
+
+\titleformat{\subsection}[runin]
+{\normalfont\large\bfseries}{\thesubsection}{1em}{} %For removing space b/w subsection and text    
+
+<<include=FALSE>>=
+library(knitr)
+opts_chunk$set(
+concordance=TRUE
+)
+@
+
+<<global_options, include=FALSE>>=
+knitr::opts_chunk$set(fig.pos = 'H')
+@
+
+<<message=FALSE, warning=FALSE>>=
+library(gplots) 
+library(BsMD)
+@
+
+
+\section{Question 6.5}
+
+<<>>=
+#2^3 factorial design: 8 runs
+A <- c(-1, 1, -1, 1, -1, 1, -1, 1)
+B <- c(-1, -1, 1, 1, -1, -1, 1, 1)
+C <- c(-1, -1, -1, -1, 1, 1, 1, 1)
+#3 replicates each
+R1 <- c(22, 32, 35, 55, 44, 40, 60, 39)
+R2 <- c(31, 43, 34, 47, 45, 37, 50, 41)
+R3 <- c(25, 29, 50, 46, 38, 36, 54, 47)
+
+machine_data <- data.frame(Life=c(R1, R2, R3), A=rep(A,3), B=rep(B,3), C=rep(C,3))
+machine_data[,2:4] <- lapply(machine_data[,2:4], factor)
+@
+
+
+\subsection*{(a)} \enspace 
+<<>>=
+Replicate <- cbind(R1, R2, R3)
+cbind(c("(1)", "a", "b", "ab", "c", "ac", "bc", "abc"), apply(Replicate, 1, sum))
+#n=3
+@
+
+\[
+A = \frac{1}{4n}(a - (1) + ab - b + ac - c + abc - bc) 
+\]
+\[
+A = \frac{1}{12}(104 - 78 + 148 - 119 + 113 - 127 + 127 - 164) = 0.33
+\]
+\[
+B = \frac{1}{4n}(b + ab + bc + abc - (1) - a - c - ac)
+\]
+\[
+B = \frac{1}{12}(119 + 148 + 164 + 127 - 78 - 104 - 127 - 113) = 11.33
+\]
+\[
+C = \frac{1}{12}(127 + 113 + 164 + 127 - 78 - 104 - 119 - 148) = 6.83
+\]
+\[
+AB = \frac{1}{12}(127 - 164 + 148 - 119 - 113 + 127 - 104 + 78) = -1.67
+\]
+\[
+AC = \frac{1}{12}(78 - 104 + 119 - 148 - 127 + 113 - 164 + 127) = -8.83
+\]
+\[
+BC = \frac{1}{12}(78 + 104 - 119 - 148 - 127 - 113 + 164 + 127) = -2.83
+\]
+\[
+ABC = \frac{1}{12}(127 - 164 - 113 + 127 - 148 + 119 + 104 - 78) = -2.167
+\]
+
+\vspace*{0.3in}
+
+\enspace \enspace From above, we can see that the effects of B(tool geometry), C(cutting angle), and the interaction between AC appear to be large, where A is the cutting speed. 
+
+
+\subsection*{(b)} \enspace 
+<<>>=
+anova(lm(Life~A*B*C, data=machine_data))
+@
+From the ANOVA table above, we can conclude that the effects of B, C, and interaction between A and C are highly significant, and the other effects are not since their p-values are greater than the significant level of 0.05. This says, we obatined the same results from part a.
+
+\subsection*{(c)} \enspace 
+<<>>=
+machine_data$A <- as.numeric(as.character(machine_data$A))
+machine_data$B <- as.numeric(as.character(machine_data$B))
+machine_data$C <- as.numeric(as.character(machine_data$C))
+# str(machine_data)
+summary(lm(Life~B+C+A*C, data=machine_data))
+@
+
+The regression model can be written as \[
+\hat{y} = 40.83 + 0.167A + 5.67B + 3.412C - 4.42AC
+\]
+where $\hat{y}$ is the estimated life of a machine tool in hours. 
+
+
+\subsection*{(d)} \enspace 
+<<fig.height=5, fig.width=9>>=
+par(mfrow = c(1,2))
+res <- aov(Life~A*B*C, data=machine_data)
+plot(res,1)
+plot(res,2)
+@
+Based on the two graphs above, we can conclude that there is no obvious problems with the residuals. 
+
+
+\subsection*{(e)} \enspace 
+<<fig.height=5, fig.width=11>>=
+#Main effects of B, C significant, and interaction b/w A and C
+par(mfrow = c(1,3))
+plotmeans(Life ~ B, data = machine_data, 
+          xlab="Factor B", ylab="Avg. Life of a Machine Tool(in hours)", 
+          p=.68, main = "Main effect Plot", barcol = "black") 
+plotmeans(Life ~ C , data = machine_data, 
+          xlab="Factor C", ylab="Avg. Life of a Machine Tool(in hours)", 
+          p=.68, main = "Main effect Plot", barcol = "black") 
+with(machine_data, interaction.plot(x.factor = A, 
+        trace.factor = C, response = Life, fun = mean, type = "b",
+        legend = TRUE, pch = c(1,2,3), 
+        main = "Interaction Plot(Cutting Speed-Cutting Angle)",
+        xlab = "Cutting Speed(A)", ylab = "Avg. Life of a Machine Tool(in hours)"))
+@
+Based on the two main effect plots, we can recommend that using higher level of B and C maximizes the machine tool life time. And from the interacation plot, we suggest that the machine tool life time will be maximized when we use lower level of A and higher level of C. 
+
+
+\pagebreak
+
+\section{Question 6.9}
+
+<<>>=
+#2^2 factorial desgin; 4 runs
+A <- c(-1, 1, -1, 1)
+B <- c(-1, -1, 1, 1)
+#4 Replicates each
+R1 <- c(18.2, 27.2, 15.9, 41.0)
+R2 <- c(18.9, 24.0, 14.5, 43.9)
+R3 <- c(12.9, 22.4, 15.1, 36.3)
+R4 <- c(14.4, 22.5, 14.2, 39.9)
+
+CBoard.data <- data.frame(Vibration=c(R1, R2, R3, R4), A=rep(A, 4), B=rep(B,4))
+CBoard.data[,2:3] <- lapply(CBoard.data[,2:3], factor)
+@
+
+\subsection*{(a)} \enspace 
+<<>>=
+anova(lm(Vibration~A*B, data=CBoard.data))
+@
+From the ANOVA table, we can see that all main effects of A and B and their interaction are significant since all p-values are less than 0.05. 
+
+
+\subsection*{(b)} \enspace 
+<<fig.height=5, fig.width=9>>=
+# Model adequacy checking
+par(mfrow = c(1,2))
+res <- aov(Vibration~A*B, data=CBoard.data)
+plot(res,1)
+plot(res,2)
+@
+
+Based on the residuals vs fitted values and normality plots, we can conclude that there is nothing unusual with the residuals. 
+
+\subsection*{(c)} \enspace
+<<fig.height=4, fig.width=6>>=
+par(mfrow=c(1,1))
+CBoard.data[,2:3] <- lapply(CBoard.data[,2:3], as.numeric)
+CBoard.data$A[CBoard.data$A==1] <- 1/16
+CBoard.data$A[CBoard.data$A==2] <- 1/8
+
+CBoard.data$B[CBoard.data$B==1] <- 40
+CBoard.data$B[CBoard.data$B==2] <- 90
+
+with(CBoard.data, interaction.plot(x.factor=A, trace.factor=B, 
+            response=Vibration, fun=mean, type="b", legend=T, 
+            pch=c(1,2,3), xlab="Factor A (Bit Size in inch)", 
+            ylab="Avg. Vibration", main="Interaction Plot (Bit Size-Cutting Speed)"))
+@
+
+Since we are interested in minimizing the vibration, then based on the interaction plot, we would recommend using the bit size of $\frac{1}{16}$ in. and cutting speed of 90 rpm. 
+
+
+\pagebreak
+
+\section{Question 6.16}
+<<>>=
+#2^2 factorial desgin; 4 runs
+A <- c(-1, 1, -1, 1)
+B <- c(-1, -1, 1, 1)
+#4 Replicates each
+R1 <- c(14.037, 13.880, 14.821, 14.888)
+R2 <- c(16.165, 13.860, 14.757, 14.921)
+R3 <- c(13.972, 14.032, 14.843, 14.415)
+R4 <- c(13.907, 13.914, 14.878, 14.932)
+
+Layer.data <- data.frame(Layer=c(R1, R2, R3, R4), A=rep(A, 4), B=rep(B,4))
+Layer.data[,2:3] <- lapply(Layer.data[,2:3], factor)
+@
+
+
+\subsection*{(a)} \enspace 
+<<>>=
+Replicate <- cbind(R1, R2, R3, R4)
+cbind(c("(1)", "a", "b", "ab"), apply(Replicate, 1, sum))
+#n=4
+@
+\[
+A = \frac{1}{2n}[ab + a - b - (1)]
+\]
+\[
+B = \frac{1}{2n}[ab + b - a - (1)]
+\]
+\[
+AB = \frac{1}{2n}[ab + (1) - a - b]
+\]
+\[
+A = \frac{1}{8}[59.156 + 55.686 - 59.299 - 58.081] = -0.317
+\]
+\[
+B = \frac{1}{8}[59.156 + 59.299 - 55.686 - 58.081] = 0.586
+\]
+\[
+AB = \frac{1}{8}[59.156 + 58.081 - 55.686 - 59.299] = 0.281
+\]
+
+\subsection*{(b)} \enspace 
+<<>>=
+anova(lm(Layer~A*B, data=Layer.data))
+@
+
+From the ANOVA table above, we can see that the main effects of A, B, and their interaction are all not significant since their p-values are greater than 0.05. 
+
+\subsection*{(c)} \enspace 
+<<>>=
+#Full model
+Layer.data[,2:3] <- lapply(Layer.data[,2:3], as.numeric)
+Layer.data$A[Layer.data$A==1] <- 0.55
+Layer.data$A[Layer.data$A==2] <- 0.59
+
+Layer.data$B[Layer.data$B==1] <- 10
+Layer.data$B[Layer.data$B==2] <- 15
+str(Layer.data)
+
+summary(lm(Layer~A*B, data=Layer.data))
+@
+
+Based on the summary result above, we can conclude that the regression model with all effects can be written as 
+\[
+\hat{y} = 37.627 - 43.119A - 1.487B + 2.815AB
+\]
+where $\hat{y}$ is the estimated epitaxial layer thickness, A is the arsenic flow rate and B is the deposition time. 
+
+\subsection*{(d)} \enspace 
+<<fig.height=5, fig.width=9>>=
+par(mfrow = c(1,2))
+res <- aov(Layer~A*B, data=Layer.data)
+plot(res,1)
+plot(res,2)
+@
+
+From the residuals plots above, we can see that there are some outliers we should concern such as the points with the labels 5, 9, and 13. 
+
+\subsection*{(e)} \enspace For the observation of 16.165, we consider this as the outlier. We can fix this by replacing it with the average of the other three observations in the same row. 
+<<>>=
+(14.037 + 13.972 + 13.907)/3
+@
+Therefore, we should replace the outlier with the value of 13.972.
+
+
+\pagebreak
+
+\section{Question 6.19}
+
+<<>>=
+#2^4; 16 runs; 
+A <- rep(c(-1, 1), 8)
+B <- rep(c(-1, -1, 1, 1), 4)
+C <- rep(c(rep(-1,4), rep(1,4)),2)
+D <- c(rep(-1,8), rep(1,8))
+# two replicates each
+R1 <- c(7.037, 14.707, 11.635, 17.273, 10.403, 4.368, 9.360, 13.440, 8.561, 
+        16.867, 13.876, 19.824, 11.846, 6.125, 11.190, 15.653)
+R2 <- c(6.376, 15.219, 12.089, 17.815, 10.151, 4.098, 9.253, 12.923, 8.951, 
+        17.052, 13.658, 19.639, 12.337, 5.904, 10.935, 15.053)
+
+titanium.data <- data.frame(Crack.len=c(R1, R2), A=A, B=B, C=C, D=D)
+@
+
+\subsection*{(a)} \enspace
+<<>>=
+Replicate <- cbind(R1, R2)
+cbind(c("(1)", "a", "b", "ab", "c", "ac", "bc", "abc", "d", "ad", 
+        "bd", "abd", "cd", "acd", "bcd", "abcd"), apply(Replicate, 1, sum))
+
+#n=2
+@
+
+\[
+A = \frac{1}{16}[-(1)+a-b+ab-c+ac-bc+abc-d+ad-bd+abd-cd+acd-bcd+abcd] = 3.019
+\]
+\[
+B = \frac{1}{16}[-(1)-a+b+ab-c-ac+bc+abc-d-ad+bd+abd-cd-acd+bcd+abcd] = 3.976
+\]
+\[
+AB = \frac{1}{16}[(1)-a-b+ab+c-ac-bc+abc+d-ad-bd+abd+cd-acd-bcd+abcd] = 1.934
+\]
+
+\includegraphics[width=15cm, height=9cm]{Table.PNG}
+
+Followed by the table above, we will have C = -3.596, AC = -4.008, BC = 0.096, ABC = 3.138, D = 1.958, AD = 0.077, BD = 0.047, ABD = 0.098, CD = -0.077, ACD = 0.019, BCD = 0.036, ABCD = 0.014.  
+
+Therefore, the factor A, B, C, AC, ABC tend to have large effects as their absolute values are greater than 3. 
+
+
+
+\subsection*{(b)} \enspace
+<<>>=
+titanium.data[,2:5] <- lapply(titanium.data[,2:5], factor)
+# str(titanium.data)
+anova(lm(Crack.len~A*B*C*D, data=titanium.data))
+@
+
+Based on the ANOVA table above, we can see that the factor effects of A, B, C, D, AB, AC, and ABC are significant since their p-values are less than 0.05. Then, we can conclude that these factors affect cracking at significant level of 0.05. 
+
+
+\subsection*{(c)} \enspace
+<<>>=
+titanium.data <- data.frame(Crack.len=c(R1, R2), A=A, B=B, C=C, D=D)
+summary(lm(Crack.len~A*B*C+D, data=titanium.data))
+@
+
+From part b, we found that the factor effects of A, B, C, D, AB, AC, and ABC are significant. Then, the regression model can be written as 
+\[
+\hat{y} = 11.988 + 1.509A + 1.988B - 1.798C + 0.979D + 0.967AB - 2.004AC + 0.048BC + 1.569ABC
+\]
+where $\hat{y}$ is the estimated length of crack, A is the pouring temperature, B is the titanium content, C is the heat treatment method, D is the amount of grain refiner used. 
+
+
+\subsection*{(d)} \enspace
+<<fig.height=5, fig.width=9>>=
+par(mfrow = c(1,2))
+res <- aov(Crack.len~A*B*C*D, data=titanium.data)
+plot(res,1)
+plot(res,2)
+@
+
+From the residuals vs fitted values and normality plots, we will conclude that there is nothing unusual with the residuals. 
+
+
+\subsection*{(f)} \enspace
+<<fig.height=9, fig.width=11>>=
+#A, B, C, D, AB, AC, and ABC significant
+#AB interaction, AC interaction
+par(mfrow = c(2, 2))
+with(titanium.data, interaction.plot(x.factor = A, 
+        trace.factor = B, response = Crack.len, fun = mean, type = "b",
+        legend = TRUE, pch = c(1,2,3), 
+        main = "Interaction Plot(Pouring Temperature-Titanium Content)",
+        xlab = "Pouring Temperautre(A)", ylab = "Avg. length of crack(in mm*10^-2)"))
+with(titanium.data, interaction.plot(x.factor = A, 
+        trace.factor = C, response = Crack.len, fun = mean, type = "b",
+        legend = TRUE, pch = c(1,2,3), 
+        main = "Interaction Plot(Pouring Temperature-Heat Treatment Method)",
+        xlab = "Pouring Temperautre(A)", ylab = "Avg. length of crack(in mm*10^-2)"))
+plotmeans(Crack.len ~ D, data = titanium.data, 
+          xlab="Factor D", ylab="Avg. length of crack(in mm*10^-2)", 
+          p=.68, main = "Plot of Main effect D", barcol = "black") 
+@
+
+Since we are interested in the smallest length of crack, then from the interaction and main effect plots, we would recommend using lower levels of A, B, C, and D give the smallest length of crack. 
+
+
+\pagebreak
+
+\section{Question 6.30}
+
+\subsection*{(a)} \enspace
+<<fig.height=5, fig.width=8>>=
+# 2^5; 32 runs; no replicate
+A <- rep(c(-1, 1), 16)
+B <- rep(c(-1, -1, 1, 1), 8)
+C <- rep(c(rep(-1,4), rep(1,4)), 4)
+D <- c(rep(-1,8), rep(1,8), rep(-1,8), rep(1,8))
+E <- c(rep(-1,16), rep(1,16))
+plant.data <- data.frame(Yield=c(7, 9, 34, 55, 16, 20, 40, 60, 8, 10, 32, 
+                                 50, 18, 21, 44, 61, 8, 12, 35, 52, 15, 22, 
+                                 45, 65, 6, 10, 30, 53, 15, 20, 41, 63), 
+                         A=A, B=B, C=C, D=D, E=E)
+# str(plant.data)
+fit <- lm(Yield~A*B*C*D*E, data=plant.data)
+par(mfrow=c(1,1))
+DanielPlot(fit)
+@
+
+Based on the result of Daniel's plot, we can see that the factor effects of A, B, C, and AB appear to be large. 
+
+\subsection*{(b)} \enspace
+<<>>=
+plant.data[,2:6] <- lapply(plant.data[,2:6], factor)
+anova.fit <- aov(Yield~A*B+C, data=plant.data)
+summary(anova.fit)
+@
+
+From part a, we found that the significant factors are A, B, C, and the interaction between A and B. Then, we will use these to conduct an ANOVA test, as shown above. Based on the ANOVA result, we can see that all factors are significant since their p-values as less than 0.05.
+
+
+\subsection*{(c)} \enspace
+<<>>=
+plant.data <- data.frame(Yield=c(7, 9, 34, 55, 16, 20, 40, 60, 8, 10, 32, 
+                                 50, 18, 21, 44, 61, 8, 12, 35, 52, 15, 22, 
+                                 45, 65, 6, 10, 30, 53, 15, 20, 41, 63), 
+                         A=A, B=B, C=C, D=D, E=E)
+summary(lm(Yield~A*B+C, data=plant.data))
+@
+
+The regression model can be written as 
+\[
+\hat{y} = 30.531 + 5.906A + 16.969B + 4.844C + 3.969AB 
+\]
+where $\hat{y}$ is the estimated chemical yield, A is the apearture setting, B is the exposure time, C is the development time, and AB is the interaction between A and B. 
+
+
+\subsection*{(d)} \enspace
+<<fig.height=4, fig.width=6>>=
+plot(anova.fit, 2)
+@
+
+The normality plot looks nothing unusual, then we can say that the assumption is satisfied. 
+
+
+\subsection*{(e)} \enspace
+<<fig.height=11, fig.width=11>>=
+par(mfrow = c(2,3))
+plant.data[,2:6] <- lapply(plant.data[,2:6], factor)
+plot(aov(Yield~A, data=plant.data), 1)
+plot(aov(Yield~B, data=plant.data), 1)
+plot(aov(Yield~C, data=plant.data), 1)
+plot(aov(Yield~D, data=plant.data), 1)
+plot(aov(Yield~E, data=plant.data), 1)
+@
+
+From the residuals vs fitted values plot, we can conclude that the constant variance assumption is not satisfied since we only observed residual points only at the edges of the plots. 
+
+
+\subsection*{(f)} \enspace
+<<fig.height=4, fig.width=6>>=
+with(plant.data, interaction.plot(x.factor = A, 
+        trace.factor = B, response = Yield, fun = mean, type = "b",
+        legend = TRUE, pch = c(1,2,3), 
+        main = "Interaction Plot(Aperture Setting-Exposure Time)",
+        xlab = "Aperture Setting(A)", ylab = "Avg. Yield"))
+@
+
+From the previous findings, we know that AB interaction is significant. And from the interaction plot, we can see that the factor B has a greater effect on chemical yield at both low and high levels than factor A. 
+
+
+\subsection*{(g)} \enspace
+<<fig.height=5, fig.width=10>>=
+#A, B, C, AB
+par(mfrow=c(1,2))
+with(plant.data, interaction.plot(x.factor = A, 
+        trace.factor = B, response = Yield, fun = mean, type = "b",
+        legend = TRUE, pch = c(1,2,3), 
+        main = "Interaction Plot(Aperture Setting-Exposure Time)",
+        xlab = "Aperture Setting(A)", ylab = "Avg. Yield"))
+plotmeans(Yield ~ C, data = plant.data, 
+          xlab="Factor C", ylab="Avg. Yield", 
+          p=.68, main = "Plot of Main effect C", barcol = "black") 
+@
+
+Based on the plots above, we would recommend using higher level of A, higher level of B and higher level of C give the highest yield. That says, we suggest using large aperture setting, 20\% above nominal exposure time, and 45s development time. 
+
+
+
+\pagebreak
+
+\section{Question 6.32}
+
+\subsection*{(a)} \enspace
+<<fig.height=5, fig.width=8>>=
+# 2^4; 16 runs; no replicate
+A <- c(1, -1, -1, -1, -1, -1, 1, -1, 1, -1, 1, 1, 1, -1, 1, 1)
+B <- c(1, 1, -1, -1, -1, -1, -1, 1, -1, 1, -1, 1, 1, 1, 1, -1)
+C <- c(1, -1, 1, 1, -1, -1, 1, -1, -1, 1, -1, 1, -1, 1, -1, 1)
+D <- c(-1, 1, -1, 1, -1, 1, -1, -1, -1, 1, 1, 1, -1, -1, 1, 1)
+    
+yield.data <- data.frame(Yield=c(15, 13, 17, 19, 12, 10, 15, 13, 18, 17, 
+                                 25, 23, 16, 20, 24, 21), 
+                         A=A, B=B, C=C, D=D)
+
+fit <- lm(Yield~A*B*C*D, data=yield.data)
+par(mfrow=c(1,1))
+DanielPlot(fit)
+@
+
+From the result of Daniel's plot, we can conclude that the factors A, C, D, and interactions AC, AD appear to have larger effects.
+
+
+\subsection*{(b)} \enspace
+<<>>=
+yield.data[, 2:5] <- lapply(yield.data[, 2:5], factor)
+anova.fit <- aov(Yield~A*C+A*D, data=yield.data)
+summary(anova.fit)
+@
+
+Using the results from part a to conduct a ANOVA test. From the ANOVA table above, we can see that all the factors are significant since their p-values are less than 0.05. 
+
+
+\subsection*{(c)} \enspace
+<<>>=
+yield.data[, 2:5] <- lapply(yield.data[, 2:5], as.numeric)
+
+yield.data$A[yield.data$A==1] <- 2.5
+yield.data$A[yield.data$A==2] <- 3
+
+yield.data$B[yield.data$B==1] <- 0.14
+yield.data$B[yield.data$B==2] <- 0.18
+
+yield.data$C[yield.data$C==1] <- 60
+yield.data$C[yield.data$C==2] <- 80
+
+yield.data$D[yield.data$D==1] <- 225
+yield.data$D[yield.data$D==2] <- 250
+
+# str(yield.data)
+summary(lm(Yield~A*C+A*D, data=yield.data))
+@
+
+After recoding the factors with their corresponding numerical values, the regression model can be written as 
+\[
+\hat{y} = 209.125 - 83.500A + 2.438C - 1.630D - 0.850AC + 0.640AD
+\]
+where $\hat{y}$ is the estimated yield, A is the time, B is the concentration, C is the pressure, and D is the temperature. 
+
+
+\subsection*{(d)} \enspace
+<<fig.height=5, fig.width=9>>=
+par(mfrow=c(1,2))
+plot(anova.fit, 1)
+plot(anova.fit, 2)
+@
+
+From the residuals vs fitted values and normality plots, we can conclude that there is nothing unusual with the residuals. 
+
+
+
+\pagebreak
+
+\section{Question 7.3}
+
+<<>>=
+#2^4; 16 runs; 2 Blocks 
+A <- rep(c(-1, 1), 8)
+B <- rep(c(-1, -1, 1, 1), 4)
+C <- rep(c(rep(-1,4), rep(1,4)),2)
+D <- c(rep(-1,8), rep(1,8))
+
+R1 <- c(7.037, 14.707, 11.635, 17.273, 10.403, 4.368, 9.360, 13.440, 8.561, 
+        16.867, 13.876, 19.824, 11.846, 6.125, 11.190, 15.653)
+R2 <- c(6.376, 15.219, 12.089, 17.815, 10.151, 4.098, 9.253, 12.923, 8.951, 
+        17.052, 13.658, 19.639, 12.337, 5.904, 10.935, 15.053)
+
+titanium.data <- data.frame(Crack.len=c(R1, R2), Blocks=rep(c(rep(1,16), rep(2,16))), 
+                            A=A, B=B, C=C, D=D)
+@
+
+<<fig.height=4, fig.width=7>>=
+lm.fit <- lm(Crack.len~Blocks+A*B*C*D, data=titanium.data)
+DanielPlot(lm.fit)
+@
+
+<<>>=
+titanium.data[,2:6] <- lapply(titanium.data[,2:6], factor)
+# str(titanium.data)
+anova(lm(Crack.len~Blocks+A*B*C*D, data=titanium.data))
+@
+
+From the Daniel's plot and ANOVA test result, we can conclude that the significant factor effects are A, B, C, D, AB, AC, and ABC. And the blocking effect is not significant since its p-value greater than 0.05. 
+
+
+\pagebreak
+
+\section{Question 7.7}
+
+\includegraphics[width=15cm, height=13cm]{77.PNG}
+
+\enspace \enspace From 6.30, we found that the significant factors are A, B, C, and the interaction between A and B. And it is shown with the Daniel's plot below. Then, by conducting an ANOVA test with the confounded blocks, we will have the following result. 
+
+<<fig.height=4, fig.width=7>>=
+A <- rep(c(-1, 1), 16)
+B <- rep(c(-1, -1, 1, 1), 8)
+C <- rep(c(rep(-1,4), rep(1,4)), 4)
+D <- c(rep(-1,8), rep(1,8), rep(-1,8), rep(1,8))
+E <- c(rep(-1,16), rep(1,16))
+#Confounded w/ blocks
+Blocks <- c(1, 2, 2, 1, 2, 1, 1, 2, 2, 1, 1, 2, 1, 2, 2, 1, 
+            2, 1, 1, 2, 1, 2, 2, 1, 1 , 2, 2, 1, 2, 1, 1, 2)
+plant.data <- data.frame(Yield=c(7, 9, 34, 55, 16, 20, 40, 60, 8, 10, 32, 
+                                 50, 18, 21, 44, 61, 8, 12, 35, 52, 15, 22, 
+                                 45, 65, 6, 10, 30, 53, 15, 20, 41, 63), 
+                         Blocks=Blocks, A=A, B=B, C=C, D=D, E=E)
+
+lm.fit <- lm(Yield~Blocks+A*B*C*D*E, data=plant.data)
+DanielPlot(lm.fit)
+@
+
+<<>>=
+plant.data[,2:7] <- lapply(plant.data[,2:7], factor)
+# str(plant.data)
+
+anova(lm(Yield~Blocks+A*B+C, data=plant.data))
+@
+
+Based on the ANOVA result, we can conclude that the confounded blocking effect is not significant since its p-value is greater than 0.05. 
+
+
+\pagebreak
+
+\section{Question 7.8}
+
+\includegraphics[width=14cm, height=9cm]{78.PNG}
+
+<<>>=
+A <- rep(c(-1, 1), 16)
+B <- rep(c(-1, -1, 1, 1), 8)
+C <- rep(c(rep(-1,4), rep(1,4)), 4)
+D <- c(rep(-1,8), rep(1,8), rep(-1,8), rep(1,8))
+E <- c(rep(-1,16), rep(1,16))
+#Confounded w/ blocks
+Blocks <- c(1, 2, 2, 1, 4, 3, 3, 4, 3, 4, 4, 3, 2, 1, 1, 2, 
+            3, 4, 4, 3, 2, 1, 1, 2, 1, 2, 2, 1, 4, 3, 3, 4)
+# table(Blocks)
+plant.data <- data.frame(Yield=c(7, 9, 34, 55, 16, 20, 40, 60, 8, 10, 32, 
+                                 50, 18, 21, 44, 61, 8, 12, 35, 52, 15, 22, 
+                                 45, 65, 6, 10, 30, 53, 15, 20, 41, 63), 
+                         Blocks=Blocks, A=A, B=B, C=C, D=D, E=E)
+@
+
+<<fig.height=4, fig.width=7>>=
+lm.fit <- lm(Yield~Blocks+A*B*C*D*E, data=plant.data)
+DanielPlot(lm.fit)
+@
+
+<<>>=
+plant.data[,2:7] <- lapply(plant.data[,2:7], factor)
+# str(plant.data)
+
+anova(lm(Yield~Blocks+A*B+C, data=plant.data))
+@
+
+By repeating problem 7.7, we use four blocks this time. Then, based on the ANOVA result, we can conclude that the confounded blocking effect is not significant since its p-value is greater than 0.05.
+
+
+
+
+\pagebreak
+
+\section{Question 7.9}
+
+\includegraphics[width=14cm, height=9cm]{79.PNG}
+
+<<>>=
+A <- rep(c(-1, 1), 16)
+B <- rep(c(-1, -1, 1, 1), 8)
+C <- rep(c(rep(-1,4), rep(1,4)), 4)
+D <- c(rep(-1,8), rep(1,8), rep(-1,8), rep(1,8))
+E <- c(rep(-1,16), rep(1,16))
+#Confounded w/ blocks
+Blocks <- c(1, 2, 3, 4, 4, 3, 2, 1, 4, 3, 2, 1, 1, 2, 3, 4, 
+            2, 1, 4, 3, 3, 4, 1, 2, 3, 4, 1, 2, 2, 1, 4, 3)
+# table(Blocks)
+plant.data <- data.frame(Yield=c(7, 9, 34, 55, 16, 20, 40, 60, 8, 10, 32,
+                                 50, 18, 21, 44, 61, 8, 12, 35, 52, 15, 22, 
+                                 45, 65, 6, 10, 30, 53, 15, 20, 41, 63), 
+                         Blocks=Blocks, A=A, B=B, C=C, D=D, E=E)
+@
+
+<<fig.height=4, fig.width=7>>=
+lm.fit <- lm(Yield~Blocks+A*B*C*D*E, data=plant.data)
+DanielPlot(lm.fit)
+@
+
+<<>>=
+plant.data[,2:7] <- lapply(plant.data[,2:7], factor)
+
+anova(lm(Yield~Blocks+A*B+C, data=plant.data))
+@
+
+Similarly, from the Daniel's plot and ANOVA test result, we will conclude that the factor effects of A, B, C, and AB are significant, while the confounded blocking effect is not significant.
+
+
+
+
+\end{document}
