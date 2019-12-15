@@ -1,4 +1,4 @@
-# This folder contains some works I have done from STAT440 big data class at SFU. 
+## This folder contains some works I have done from STAT440 big data class at SFU. 
 
 ### 3 Kaggle competitions:
  - BC Ferry prediction, data provided by CANSSI NCSC. Predict whether or not a ferry will be delayed.  
