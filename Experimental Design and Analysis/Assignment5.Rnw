@@ -1,0 +1,464 @@
+\documentclass[10pt]{article}
+
+\title{STAT430 Assignment5}
+\author{Jiajun Zhang}
+
+\usepackage{float}
+\linespread{1.5}
+\usepackage[margin=1in]{geometry}
+\usepackage{biblatex}
+
+\makeatletter
+\renewcommand{\@seccntformat}[1]{}
+\makeatother
+
+\usepackage{titlesec}
+\usepackage{amsmath}
+
+\begin{document}
+
+\maketitle
+
+\titleformat{\subsection}[runin]
+{\normalfont\large\bfseries}{\thesubsection}{1em}{} %For removing space b/w subsection and text    
+<<include=FALSE>>=
+library(knitr)
+opts_chunk$set(
+concordance=TRUE
+)
+@
+
+<<global_options, include=FALSE>>=
+knitr::opts_chunk$set(fig.pos = 'H')
+@
+
+<<message=FALSE, warning=FALSE>>=
+library(FrF2)
+library(BsMD)
+@
+
+\section{Question 8.2}
+
+The one-half fraction of the $2^4$ design is constructed as shown below. 
+<<>>=
+# 2^(4-1) design; 2^4 design with 8 runs
+factors <- FrF2(nruns = 8, nfactors = 4, gen="ABC", randomize=FALSE)
+summary(factors)
+@
+
+<<>>=
+R1 <- c(7.037, 16.867, 13.876, 17.273, 11.846, 4.368, 9.360, 15.653)
+titanium.data <- cbind.data.frame(factors, Crack.len = R1)
+titanium.data.num <- titanium.data
+
+titanium.data.num[, 1:4] <- lapply(titanium.data.num[, 1:4], as.character)
+titanium.data.num[, 1:4] <- lapply(titanium.data.num[, 1:4], as.numeric)
+
+lm.fit <- lm(Crack.len~A*B*C*D, data=titanium.data.num)
+lm.fit
+@
+
+By looking at the regression coefficients, A, B, C, D, and AC tend to be significant since they have larger effects relative to the other effects. And we can visualize them from the Daniel's plot below.
+
+<<fig.height=3.5, fig.width=5.5>>=
+DanielPlot(lm.fit)
+
+anova(lm(Crack.len~A+B+C+D+A:C, data=titanium.data))
+@
+
+Then, using the results above to construct an ANOVA test, we can see that all the factors are not significant since their p-values are all greater than 0.05.  
+
+
+\pagebreak
+
+\section{Question 8.4}
+
+The one-quarter fraction of the $2^5$ design is constructed as shown below.
+<<>>=
+# 2^(5-2) design; 2^5 design with 8 runs
+factor1 <- FrF2(nruns = 8, nfactors = 5, gen = c("AB","AC"), randomize = FALSE)
+summary(factor1)
+@
+
+<<>>=
+obs <- c(6, 9, 35, 50, 18, 22, 40, 63)
+plant.data <- cbind.data.frame(factor1, Yield = obs)
+plant.data.num <- plant.data
+
+plant.data.num[, 1:5] <- lapply(plant.data.num[, 1:5], as.character)
+plant.data.num[, 1:5] <- lapply(plant.data.num[, 1:5], as.numeric)
+
+lm.fit <- lm(Yield~A*B*C*D*E, data=plant.data.num)
+lm.fit
+@
+
+By looking at the regression coefficients, A, B, C, and D tend to be significant since they have larger effects relative to the other effects.
+
+<<fig.height=3.5, fig.width=5.5>>=
+DanielPlot(lm.fit)
+
+anova(lm(Yield~A+B+C+D, data=plant.data))
+@
+
+Using the results above to construct an ANOVA test, we can see that all the factors A, B, C, and D are significant since their p-values are less than 0.05. 
+
+
+\pagebreak
+
+\section{Question 8.11}
+
+\subsection*{(a)} \enspace 
+<<>>=
+matrix(c("-", "-", "-", "-", "+", 
+         "+", "-", "-", "+", "-", 
+         "-", "+", "-", "+", "+", 
+         "+", "+", "-", "-", "-", 
+         "-", "-", "+", "+", "-", 
+         "+", "-", "+", "-", "+", 
+         "-", "+", "+", "-", "-", 
+         "+", "+", "+", "+", "+"), nrow=8, ncol=5, byrow=T, 
+       dimnames=list(c("e", "ad", "bde", "ab", "cd", "ace", "bc", "abcde"), 
+                     c("A", "B", "C", "D", "E")))
+@
+
+From the output table above, we can see that for each row, the combinations of A and C result in E since the signs in E are the products of A and C signs. Similiarly, we can confirm that the product signs of B and D also have the same signs in E.  
+
+
+\subsection*{(b)} \enspace
+
+Since we have design generators ACE and BDE, then we can obtain the other generator ACEBDE = ABCD$E^2$ = ABCD. Then, the complete defining relation is 
+\[
+I = ACE = BDE = ABCD
+\]
+Then, we compute the aliases in this design. For example, for facotr A, we will have aliases AACE = $A^2$CE = CE, ABDE, and AABCD = $A^2$BCD = BCD. Also, for factor B, we can have ABCE, DE, and ACD. Similarly, we can compute the rest of aliases. Then, the final aliases structure can be written as:
+\[
+A = CE = ABDE = BCD
+\]
+\[
+B = ABCE = DE = ACD
+\]
+\[
+C = AE = BCDE = ABD
+\]
+\[
+D = ACDE = BE = ABC
+\]
+\[
+E = AC = BD = ABCDE
+\]
+\[
+AB = BCE = ADE = CD
+\]
+\[
+BC = ABE = CDE = AD
+\]
+
+
+\subsection*{(c)} \enspace
+<<>>=
+# 2^(5-2) design; 2^5 design with 8 runs
+factor2 <- FrF2(nruns = 8, nfactors = 5, gen = c("ABC","AC"), randomize = FALSE)
+# summary(factor2)
+
+obs <- c(23.2, 16.9, 16.8, 15.5, 23.8, 23.4, 16.2, 18.1)
+Chem.data <- cbind.data.frame(factor2, Yield = obs)
+Chem.data.num <- Chem.data
+
+Chem.data.num[, 1:5] <- lapply(Chem.data.num[, 1:5], as.character)
+Chem.data.num[, 1:5] <- lapply(Chem.data.num[, 1:5], as.numeric)
+
+lm.fit <- lm(Yield~A*B*C*D*E, data=Chem.data.num)
+#Estimated effects
+2 * coef(lm.fit)
+@
+
+Since $E = AC$ and $D = BE = ABC$, and from the results above, we can conclude that the estimated main effects are: $A = -1.525$, $B = -5.175$, $C = 2.275$, $AB = 1.825$, $AC = E = 2.275$, $BC = -1.275$, $ABC = D = -0.675$. 
+
+
+\subsection*{(d)} \enspace
+<<>>=
+anova(lm(Yield~A+B+C+D+E, data=Chem.data))
+@
+
+The ANOVA test is performed above. We can see that all factors are not significant at 5\% significance level. Since $AB$ and $AD$ are both aliased with other factors, and we can see that all two and three factor interactions are negligible from the main effects output. Then, we can discard them and use them as error. 
+
+
+\subsection*{(e)} \enspace
+<<fig.height=5, fig.width=9.5>>=
+par(mfrow = c(1,2))
+res <- aov(Yield~A+B+C+D+E, data=Chem.data)
+plot(res,1); plot(res,2)
+@
+
+There is a sort of pattern that the constant variance assumption not satisfied just looking at the residuals vs fitted values plot. But, we might need a further test for that. And normality plot looks nothing unusual. 
+
+
+
+\pagebreak
+
+\section{Question 8.13}
+
+By having two four-factor interactions as generators, we can choose $F = CDE$, and $G = ABC$. Then, we will have $I = CDEF = ABCG$. Also, $CDEFABCG = ABDEFG$. Therefore, the complete defining relation is: 
+\[
+I = CDEF = ABCG = ABDEFG
+\]
+Then, this is a resolution $\RN{4}$ design. The design can be constructed as below. 
+<<>>=
+A <- rep(c("-", "+"), 16)
+B <- rep(c("-", "-", "+", "+"), 8)
+C <- rep(c(rep("-",4), rep("+",4)), 4)
+D <- rep(c(rep("-",8), rep("+",8)), 2)
+E <- rep(c(rep("-",16), rep("+",16)))
+#F=CDE
+F <- c(rep("-", 4), rep("+", 8), rep("-", 4), rep("+", 4), rep("-", 8), rep("+", 4))
+#G=ABC
+G <- c("-", "+", "+", "-", "+", "-", "-", "+", "-", "+", "+", "-", "+", "-", "-", "+", 
+       "-", "+", "+", "-", "+", "-", "-", "+", "-", "+", "+", "-", "+", "-", "-", "+")
+Trt <- c("(1)", "ag", "bg", "ab", "cfg", "acf", "bcf", "abcfg", "df", "adfg", "bdfg", 
+         "abdf", "cdg", "acd", "bcd", "abcdg", "ef", "aefg", "befg", "abef", "ceg", 
+         "ace", "bce", "abceg", "de", "adeg", "bdeg", "abde", "cdefg", "acdef", "bcdef", 
+         "abcdefg")
+design <- data.frame(A=A, B=B, C=C, D=D, E=E, F=F, G=G, Trt.Combination=Trt)
+design
+@
+
+Then, we can write down the aliases structure for this design as: 
+\[
+A = ACDEF = BCG = BDEFG
+\]
+\[
+B = BCDEF = ACG = ADEFG
+\]
+\[
+C = DEF = ABG = ABCDEFG
+\]
+\[
+D = CEF = ABCDG = ABEFG 
+\]
+\[
+E = CDF = ABCEG = ABDFG
+\]
+\[
+F = CDE = ABCFG = ABDEG
+\]
+\[
+G = CDEFG = ABC = ABDEF
+\]
+\[
+AB = ABCDEF = CG = DEFG 
+\]
+\[
+AC = ADEF = BG = BCDEFG
+\]
+\[
+AD = ACEF = BCDG = BEFG
+\]
+\[
+AE = ACDF = BCEG = BDFG 
+\]
+\[
+AF = ACDE = BCFG = BDEG 
+\]
+\[
+AG = ACDEFG = BC = BDEF
+\]
+\[
+BD = BCEF = ACDG = AEFG
+\]
+\[
+BE = BCDF = ACEG = ADFG
+\]
+\[
+BF = BCDE = ACFG = ADEG 
+\]
+\[
+CD = EF = ABDG = ABCEFG
+\]
+\[
+CE = DF = ABEG = ABCDFG
+\]
+\[
+CF = DE = ABFG = ABCDEG
+\]
+\[
+DG = CEFG = ABCD = ABEF 
+\]
+\[
+EG = CDFG = ABCE = ABDF
+\]
+\[
+FG = CDEG = ABCF = ABDE
+\]
+
+Then, we can outline the ANOVA table as shown below. Here, AB is also CG. Similiarly, $AC=BG$, $AG=BC$, $CD=EF$, $CE=DF$, $CF=DE$.
+<<>>=
+Trt.comb <- c("A", "B", "C", "D", "E", "F", "G", "AB", "AC", "AD", "AE", "AF", 
+              "AG", "BD", "BE", "CD", "CE", "CF", "DG", "EG", "FG", "Error", "Total")
+Df <- c(rep(1, 21), 9, 31)
+ANOVA <- data.frame(Treatments=Trt.comb, DF=Df)
+ANOVA
+@
+
+
+
+\pagebreak
+
+\section{Question 10.1}
+
+<<>>=
+hardwood.data <- data.frame(Strength=c(160, 171, 175, 182, 184, 181, 188, 193, 195, 200), 
+                            Percent.Hardwood=c(10, 15, 15, 20, 20, 20, 25, 25, 28, 30))
+@
+
+\subsection*{(a)} \enspace 
+<<>>=
+lm.fit <- lm(Strength~Percent.Hardwood, data=hardwood.data)
+lm.fit
+@
+
+A linear regression model can be written as: 
+\[
+\hat{y}_{Strength} = 143.824 + 1.879x_{PercentHardwood}
+\]
+
+\subsection*{(b)} \enspace
+<<>>=
+summary(lm.fit)
+@
+
+Based on the summary result, we can conclude that the predictor of percent hardwood is statistically significant in the model since its p-value is less than 0.05. 
+
+\subsection*{(c)} \enspace
+<<>>=
+confint(lm.fit, 'Percent.Hardwood', level = 0.95, interval = 'confident')
+@
+
+A 95\% confidence interval on $\beta_{1}$ is [1.610, 2.147].
+
+
+\pagebreak
+
+\section{Question 10.6}
+<<>>=
+bearing.data <- data.frame(Bearing=c(193, 230, 172, 91, 113, 125), 
+                           Oil.Vis=c(1.6, 15.5, 22.0, 43.0, 33.0, 40.0), 
+                           Load=c(851, 816, 1058, 1201, 1357, 1115))
+@
+
+\subsection*{(a)} \enspace 
+<<>>=
+lm.fit <- lm(Bearing~., data=bearing.data)
+lm.fit
+@
+
+A multiple linear regression model can be written as:
+\[
+\hat{y} = 350.9943 - 1.2720x_{1} - 0.1539x_{2}
+\]
+where $\hat{y}$ is the esimated bearing, $x_{1}$ is the oil viscosity and $x_{2}$ is the load. 
+
+\subsection*{(b)} \enspace
+<<>>=
+summary(lm.fit)
+@
+
+From the summary result, we can see that there are no significant relationships between both predictors and the response since the p-values of both predictors are greater than 0.05. 
+
+
+\subsection*{(c)} \enspace
+<<>>=
+#t statistics
+summary(lm.fit)[["coefficients"]][, "t value"]
+
+#Critical values 
+qt(0.025, 6-1)
+@
+
+First, we will have our null hypothesis stated as there is no linear relationship between x and y and alternative hypothesis is there is linear relationship. Since -$t_{0.025, 5}$ = -2.57 and both predictors have t statistics greater than -2.57, then we can conclude that there are no linear relationships between the predictors and the response. 
+
+
+\pagebreak
+
+\section{Question 10.20}
+
+\subsection*{(a)} \enspace 
+\[
+DF_{model} = \frac{534.66}{133.67} = 4
+\]
+\[
+SS_{error} = 590.25 - 534.66 = 55.59
+\]
+\[
+DF_{error} = 19 - 4 = 15
+\]
+\[
+MS_{error} = \frac{55.59}{15} = 3.71
+\]
+\[
+F = \frac{133.67}{3.71} = 36.03
+\]
+
+\subsection*{(b)} \enspace 
+There are 4 predictors in the model since $df_{model}$ is 4. 
+
+\subsection*{(c)} \enspace 
+<<>>=
+#F critical
+qf(0.999, 4, 15)
+@
+Since $F_{0}$=36.03 $>$ $F_{0.001, 4, 15}$=8.25, then the p-value must be smaller than 0.001.  
+
+\subsection*{(d)} \enspace
+<<>>=
+abs(qt(0.0005, 15))
+@
+Since $t_{\alpha/2, n-k-1}$ = $t_{0.0005, 15}$ = 4.073 and 6.11 $>$ 4.073, then we can conclude that the p-value is less than 0.001 in this case. 
+
+\subsection*{(e)} \enspace
+\[
+R^2 = \frac{SS_{R}}{SS_{T}} = \frac{534.66}{590.25} = 90.58\%
+\]
+
+
+\pagebreak
+
+\section{Question 10.22}
+
+\subsection*{(a)} \enspace
+\[
+SS_{error} = 275.60 - 245.86 = 29.74
+\]
+\[
+DF_{error} = (45-1) - (3-1) = 42
+\]
+\[
+MS_{error} = \frac{29.74}{42} = 0.708
+\]
+
+\subsection*{(b)} \enspace
+\[
+MS_{model} = \frac{245.86}{2} = 122.93
+\]
+
+\subsection*{(c)} \enspace
+\[
+F = \frac{122.93}{0.708} = 173.63
+\]
+<<>>=
+#F critical
+qf(0.999, 2, 42)
+@
+Since $F_{0}$ is way larger than 8.179, we can conclude that p-value is less than 0.001 which is highly significant.
+
+\subsection*{(d)} \enspace
+\[
+R^2 = \frac{245.86}{275.60} = 89.2\%
+\]
+
+\subsection*{(e)} \enspace
+\[
+R^2_{adj} = 1 - (\frac{n-1}{n-p})(1-R^2) = 1 - (\frac{44}{42})(1-0.892) = 88.7\%
+\]
+
+
+\end{document}
