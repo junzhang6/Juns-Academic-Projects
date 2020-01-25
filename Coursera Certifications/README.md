@@ -12,4 +12,4 @@ Click [here](https://www.coursera.org/specializations/tensorflow-in-practice) to
 
 
 #### Note: 
-According to Coursera's policy, most of the courseworks/solutions are not allowed to post publicly, besides some shareable projects pushed to Github. 
+According to Coursera's policy, most of the coursework/solutions are not allowed to post publicly, besides some shareable projects pushed to Github. 
