@@ -10,11 +10,11 @@
 
 #### Deep Learning by deeplearning.ai on Coursera
 [Deep Learning Specialization](https://www.coursera.org/account/accomplishments/specialization/certificate/LDEMDVKMCHW5)
-The course detail can be found [here](https://www.coursera.org/specializations/deep-learning). 
+- The course detail can be found [here](https://www.coursera.org/specializations/deep-learning). 
 
 #### TensorFlow in Practice by deeplearning.ai on Coursera
 [TensorFlow in Practice Specialization](https://www.coursera.org/account/accomplishments/specialization/certificate/A948ECZKKXSV)
-Click [here](https://www.coursera.org/specializations/tensorflow-in-practice) to see the detail of the course. 
+- Click [here](https://www.coursera.org/specializations/tensorflow-in-practice) to see the detail of the course. 
 
 
 
