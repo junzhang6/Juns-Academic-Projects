@@ -8,15 +8,19 @@
 - My [project](https://github.com/junzhang6/RepData_PeerAssessment1) from the Reproducible Research course. 
 - My [project](https://github.com/junzhang6/Getting-and-Cleaning-Data) from the Getting and Cleaning Data course. 
 
+&nbsp;
+
 #### Deep Learning by deeplearning.ai on Coursera
 [Deep Learning Specialization](https://www.coursera.org/account/accomplishments/specialization/certificate/LDEMDVKMCHW5)
 - The course detail can be found [here](https://www.coursera.org/specializations/deep-learning). 
+
+&nbsp;
 
 #### TensorFlow in Practice by deeplearning.ai on Coursera
 [TensorFlow in Practice Specialization](https://www.coursera.org/account/accomplishments/specialization/certificate/A948ECZKKXSV)
 - Click [here](https://www.coursera.org/specializations/tensorflow-in-practice) to see the detail of the course. 
 
-
+&nbsp;
 
 #### Note: 
 According to Coursera's policy, some of the coursework/solutions are not allowed to post publicly, besides the shareable projects pushed to Github. 
