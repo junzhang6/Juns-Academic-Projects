@@ -7,4 +7,4 @@
  - Scraping data from webpages.
  
 ### One Shiny App Project:
- - Using Vancouver climate data to design a visually interactive dashboard of results as a Shiny App. 
+ - Using Vancouver climate data to design a visually interactive dashboard of results as a Shiny App ([View](https://shiny.rcg.sfu.ca/u/jza212/Vancouver_Climate_Change/)). 
