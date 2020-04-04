@@ -23,4 +23,4 @@
 &nbsp;
 
 #### Note: 
-According to Coursera's policy, some of the coursework/solutions are not allowed to post publicly, besides the shareable projects pushed to Github. 
+According to Coursera's policy, some of the coursework/solutions are not allowed to post publicly, besides the shareable projects I have  pushed to Github. 
