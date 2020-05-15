@@ -13,6 +13,9 @@
 - My [project](https://github.com/junzhang6/RepData_PeerAssessment1) from the Reproducible Research course. 
 - My [project](https://github.com/junzhang6/Getting-and-Cleaning-Data) from the Getting and Cleaning Data course.
 
+[Data Science Specialization](https://www.coursera.org/account/accomplishments/specialization/certificate/K9WLYCC6X3J2)
+- The course detail can be found [here](https://www.coursera.org/specializations/jhu-data-science). 
+
 
 &nbsp;
 
