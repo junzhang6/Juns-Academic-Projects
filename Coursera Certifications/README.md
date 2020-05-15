@@ -2,6 +2,8 @@
 
 #### Data Science Specialization by Johns Hopkins University on Coursera 
 - It is a ten-course specialization and I have completed seven courses so far. The course Website can be found [here](https://www.coursera.org/specializations/jhu-data-science).
+- My [project1](https://rpubs.com/junzhang6/nextwordprediction) from the Data Science Capstone course.
+- My [project2](https://rpubs.com/junzhang6/textdata) from the Data Science Capstone course.
 - My [project](https://rpubs.com/junzhang6/practicalML) from the Practical Machine Learning course. 
 - My [project1](https://rpubs.com/junzhang6/COVID-19) from the Developing Data Products course.
 - My [project2](https://rpubs.com/junzhang6/LeafletMap-SFU) from the Developing Data Products course.
