@@ -9,6 +9,6 @@
  - Some assignments from STAT430 [statistical design and analysis of experiments](http://www.sfu.ca/outlines.html?2019/fall/stat/430/d100) class.
  
 ### Some course projects and certificates on Coursera: 
- - Data Science Specialization (10 courses, 9/10 completed)
+ - Data Science Specialization (10 courses)
  - Deep Learning Specialization (5 courses)
  - TensorFlow in Practice Specialization (4 courses)
