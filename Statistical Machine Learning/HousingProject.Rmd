@@ -1,0 +1,295 @@
+---
+title: "Prediction on House Prices in King County"
+author: "Jun Zhang"
+date: "12/1/2020"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Objective
+The goal of this project is to build machine learning models in order to make prediction on house sale prices in King County, USA. Data is found on Kaggle and it can be downloaded through the following [link](https://www.kaggle.com/harlfoxem/housesalesprediction). And the description of the dataset is available [here](https://geodacenter.github.io/data-and-lab//KingCounty-HouseSales2015/).
+
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(caret)
+library(corrplot) #Pearson's Corr
+library(MASS) #Box-cox
+library(car) #Vif
+library(glmnet) #LASSO, Ridge
+library(xgboost)
+data <- read.csv("kc_house_data.csv")
+str(data)
+```
+
+```{r, fig.height=10, fig.width=10}
+data <- data %>% dplyr::select(-c(date))
+corrplot(cor(data), method="number", type="lower")
+```
+
+
+```{r}
+# Remove all auxiliary information and data transformation (num -> factor)
+factorfun <- function(x){
+      x <- as.factor(x)
+}
+newdata <- data %>% mutate_at(c("waterfront", "view", "condition"), factorfun)
+
+# Replace variables of yr_built and yr_renovated with age 
+for (i in 1:nrow(newdata)){
+  if(newdata$yr_renovated[i]!=0)
+    newdata$yr_built[i] <- newdata$yr_renovated[i]
+}
+newdata$age <- 2020 - newdata$yr_built
+
+newdata <- newdata %>% dplyr::select(price, bedrooms, bathrooms, sqft_living, sqft_lot, floors, waterfront, 
+                              view, condition, age, lat, long)
+str(newdata)
+
+# Remove any missings. In this case, there is none.
+newdata <- newdata[rowSums(is.na(newdata))==0,]
+```
+
+```{r, fig.height=5, fig.width=7}
+# Data visualization
+plot(price~sqft_living, data=newdata, main="Price vs. Sqft_living", 
+     xlab="Sqft_living", ylab="Price", xlim=c(0,8000), ylim=c(0,6000000))
+boxplot(price~bedrooms, data=newdata, col=(c(2:8)), main="Price vs. Bedrooms", 
+        xlab="Bedrooms", ylab="Price")
+```
+
+```{r, fig.height=6, fig.width=15}
+boxplot(price~bathrooms, data=newdata, col=(c(2:8)), main="Price vs. Bathrooms", 
+        xlab="Bathrooms", ylab="Price")
+```
+
+```{r}
+# Preprocessing: scale and center
+params <- preProcess(newdata[c(-1)], method=c("center", "scale"))
+newdata <- predict(params, newdata)
+
+# Train-Test Split
+set.seed(123456)
+index <- sample(1:nrow(newdata), 0.8*nrow(newdata)) 
+train <- newdata[index,]
+validation <- newdata[-index,]
+```
+
+
+```{r}
+# Evaluations
+RMSE <- function(x, y){
+      sqrt(mean((x-y)^2))
+}
+
+R2 <- function(actual, pred){
+      rss <- sum((pred-actual)^2)
+      tss <- sum((actual-mean(actual))^2)
+      r2 <- 1 - rss/tss
+      return(r2)
+}
+```
+
+### Linear Regression
+```{r, fig.width=9, fig.height=5}
+# Linear Regression
+lm.fit <- lm(price~., data=newdata)
+# summary(lm.fit)
+par(mfrow=c(1,2))
+# Assumption of linearity failed, transformation needed!
+qqnorm(newdata$price)
+qqline(newdata$price, col=2)
+
+lm.res <- resid(lm.fit)
+plot(lm.fit$fitted.values, lm.res, xlab="Fitted value", ylab="Residuals")
+abline(h=0,col="red")
+```
+
+```{r, fig.width=6, fig.height=4}
+# Box-cox Trans
+par(mfrow=c(1,1))
+set.seed(123456)
+bc <- boxcox(lm.fit, lambda=seq(-1,1,0.1))
+best.lam <- bc$x[which(bc$y==max(bc$y))]
+best.lam
+lm.fit <- lm((price)^best.lam~., data=newdata)
+```
+
+```{r, fig.width=9, fig.height=5}
+par(mfrow=c(1,2))
+qqnorm(newdata$price^best.lam)
+qqline(newdata$price^best.lam, col=2)
+lm.res <- resid(lm.fit)
+plot(lm.fit$fitted.values, lm.res, xlab="Fitted value", ylab="Residuals")
+abline(h=0,col="red")
+par(mfrow=c(1,1))
+```
+
+```{r}
+# Update new dataset with Box-cox trans
+newtrain <- train
+newval <- validation
+newtrain$price <- (newtrain$price)^best.lam
+newval$price <- (newval$price)^best.lam
+
+# 10-fold CV
+train.control <- trainControl(method="cv", number=10,
+                       savePredictions="all")
+```
+
+### Linear Regression
+```{r}
+lm.model <- train(price~., data=newtrain, method="lm", trControl=train.control)
+print(lm.model)
+summary(lm.model)
+
+lm.fit <- lm(price~., data=newtrain)
+vif(lm.fit)
+
+# lm prediction
+lm.pred <- predict(lm.fit, newdata=newval[c(-1)])
+
+# Actual test price
+y <- exp(log(newval$price)/(best.lam))
+# Actual predicted price
+yhat.lm <- as.numeric(exp(log(lm.pred)/(best.lam)))
+
+lm.R2 <- summary(lm.fit)$r.squared
+lm.R2
+
+lm.RMSE <- RMSE(y, yhat.lm)
+lm.RMSE
+```
+
+
+### LASSO and Ridge
+```{r, fig.width=13, fig.height=9}
+X <- model.matrix(price~., newtrain)[,-1]
+Y <- newtrain$price
+X.test <- model.matrix(price~., newval)[,-1]
+
+lasso <- glmnet(X, Y, alpha=1)
+# No.3 parameter (sqft_living) slowest converges to zero; No.16 (lat) the second 
+plot(lasso, xvar="lambda", label=TRUE)
+```
+
+```{r, fig.width=6, fig.height=4}
+lasso.cv <- cv.glmnet(X, Y, type.measure="mse", alpha=1)
+plot(lasso.cv)
+lambda_min_lasso <- lasso.cv$lambda.min
+lambda_min_lasso
+lasso.fit <- glmnet(X, Y, alpha=1, lambda=lambda_min_lasso)
+coef(lasso.fit)
+lasso.pred <- as.numeric(predict(lasso.fit, newx=X.test))
+
+lasso.R2 <- R2(newval$price, lasso.pred)
+lasso.R2
+
+# Actual predicted price using LASSO
+yhat.lasso <- as.numeric(exp(log(lasso.pred)/(best.lam)))
+lasso.RMSE <- RMSE(y, yhat.lasso)
+lasso.RMSE
+```
+
+
+```{r, fig.width=13, fig.height=9}
+ridge <- glmnet(X, Y, alpha=0)
+plot(ridge, xvar="lambda", label=TRUE)
+ridge.fit <- cv.glmnet(X, Y, type.measure="mse", alpha=0)
+lambda_min_ridge <- ridge.fit$lambda.min
+lambda_min_ridge
+ridge.pred <- as.numeric(predict(ridge.fit, s=lambda_min_ridge, newx=X.test))
+
+ridge.R2 <- R2(newval$price, ridge.pred)
+ridge.R2
+
+# Actual predicted price using LASSO
+yhat.ridge <- as.numeric(exp(log(ridge.pred)/(best.lam)))
+ridge.RMSE <- RMSE(y, yhat.ridge)
+ridge.RMSE
+```
+
+
+```{r}
+# One-hot encoding
+dmy <- dummyVars(" ~ .", data=train)
+trainOneHot <- data.frame(predict(dmy, newdata=train))
+xx <- as.matrix(dplyr::select(trainOneHot, -price))
+yy <- trainOneHot$price
+```
+
+
+### Regression Tree 
+```{r, message=FALSE, warning=FALSE}
+train_control <- trainControl(
+  method="cv",
+  number=10,
+  savePredictions="all"
+)
+
+set.seed(123456)
+# tuneLength to specify the number of possible cp values to evaluate
+regTree <- train(x=xx, y=yy, trControl=train_control, method="rpart", 
+                 tuneLength=10)
+print(regTree)
+```
+
+
+### XGBoost 
+
+```{r, message=FALSE, warning=FALSE}
+# Default Hyperparameters
+grid_default <- expand.grid(
+  nrounds = 100,
+  max_depth = 6,
+  eta = 0.3,
+  gamma = 0,
+  colsample_bytree = 1,
+  min_child_weight = 1,
+  subsample = 1
+)
+
+train_control <- trainControl(
+  method = "cv",
+  verboseIter = FALSE, 
+  allowParallel = TRUE,
+  number=10,
+  savePredictions="all"
+)
+
+set.seed(123456)
+xgb_base <- train(
+      price~., 
+      data=train,
+      trControl = train_control,
+      tuneGrid = grid_default,
+      method = "xgbTree",
+      verbose = TRUE
+)
+
+print(xgb_base)
+
+xgb.pred <- predict(xgb_base, newdata=validation)
+
+xgb.R2 <- R2(validation$price, xgb.pred)
+xgb.R2
+
+xgb.RMSE <- RMSE(validation$price, xgb.pred)
+xgb.RMSE
+```
+
+
+
+
+
+
+
+
+
+
+
+
