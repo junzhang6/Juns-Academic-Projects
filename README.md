@@ -2,7 +2,7 @@
 
 
 ### Some projects I have done at City University of Hong Kong (MSc Data Science):
- - A [project](https://github.com/junzhang6/Juns-Academic-Projects/blob/master/Statistical%20Machine%20Learning/5001report.pdf) from statistical machine learning class that builds predictive machine learning models to make prediction on house sale prices ([RPubs](https://rpubs.com/junzhang6/HousingProject)).
+ - A [project](https://www.scribd.com/document/486936695/House-Prices-Prediction-in-King-County) from statistical machine learning class that builds predictive machine learning models to make prediction on house sale prices ([RPubs](https://rpubs.com/junzhang6/HousingProject)).
  - An interactive [application](https://junzhang6.shinyapps.io/DBMS_Project/) with Rshiny that simulates a student registration system using DBMS. 
 
 ### Some courseworks I have done at SFU (BSc Statistics):
